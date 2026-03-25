@@ -707,6 +707,54 @@ function RecordsView({ records, T, darkMode }) {
           </div>
         ))}
       </div>
+
+      <div style={{ marginTop: 32, marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>Aktivitet</div>
+        <div style={{ flex: 1, height: 1, background: T.border }} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {[
+          {
+            icon: "🔥",
+            title: "Nuvarande streak",
+            value: records.currentStreak,
+            unit: "veckor",
+            streakActive: records.currentStreak >= 2,
+          },
+          {
+            icon: "⚡",
+            title: "Längsta streak någonsin",
+            value: records.longestStreak,
+            unit: "veckor",
+            streakActive: false,
+          },
+          {
+            icon: "📅",
+            title: "Rundor denna månad",
+            value: records.roundsThisMonth,
+            unit: "rundor",
+            streakActive: false,
+          },
+          {
+            icon: "📆",
+            title: "Rundor detta år",
+            value: records.roundsThisYear,
+            unit: "rundor",
+            streakActive: false,
+          },
+        ].map((item, i) => (
+          <div key={i} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: "20px 24px" }}>
+            <div style={{ fontSize: 12, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16 }}>{item.icon}</span>
+              <span>{item.title}</span>
+            </div>
+            <div style={{ fontSize: 36, fontWeight: 900, lineHeight: 1, marginBottom: 6, color: item.streakActive ? "#f97316" : (item.value > 0 ? T.accent : T.textGhost) }}>
+              {item.value}
+              <span style={{ fontSize: 14, fontWeight: 400, color: T.textDim, marginLeft: 6 }}>{item.unit}</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -956,7 +1004,78 @@ export default function GolfApp() {
       }
     });
 
-    records = { bestRound, mostBirdies, bestHole, bestFront9, bestBack9, mostParOrBetter };
+    // Helper: get ISO week key for a date
+    function getISOWeek(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+      const week1 = new Date(d.getFullYear(), 0, 4);
+      return [d.getFullYear(), 1 + Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7)];
+    }
+    function weekKey(date) {
+      const [year, week] = getISOWeek(new Date(date));
+      return `${year}-W${String(week).padStart(2, "0")}`;
+    }
+
+    // 7. Streak calculations
+    const playedWeeks = [...new Set(rounds.map(r => weekKey(r.date)))].sort();
+
+    // Current streak: count consecutive weeks backwards from the last played week
+    let currentStreak = 0;
+    if (playedWeeks.length > 0) {
+      const weekSet = new Set(playedWeeks);
+      // Start from the most recent played week and walk backwards
+      const lastWeek = playedWeeks[playedWeeks.length - 1];
+      const [lastYear, lastWeekNum] = lastWeek.split("-W").map(Number);
+      let checkDate = new Date(lastYear, 0, 4); // Jan 4 is always in ISO week 1
+      // Move to the start of lastWeekNum
+      checkDate.setDate(checkDate.getDate() + (lastWeekNum - 1) * 7);
+      // Adjust to Monday of that ISO week
+      checkDate.setDate(checkDate.getDate() - ((checkDate.getDay() + 6) % 7));
+      while (true) {
+        const key = weekKey(checkDate);
+        if (weekSet.has(key)) {
+          currentStreak++;
+          checkDate.setDate(checkDate.getDate() - 7);
+        } else {
+          break;
+        }
+      }
+    }
+
+    // Longest streak: find longest consecutive run in sorted week list
+    let longestStreak = 0;
+    if (playedWeeks.length > 0) {
+      let run = 1;
+      longestStreak = 1;
+      for (let i = 1; i < playedWeeks.length; i++) {
+        // Check if playedWeeks[i] is exactly 1 ISO week after playedWeeks[i-1]
+        const prev = playedWeeks[i - 1];
+        const curr = playedWeeks[i];
+        const [py, pw] = prev.split("-W").map(Number);
+        // Compute next week date-based to handle year boundaries correctly
+        const prevDate = new Date(py, 0, 4);
+        prevDate.setDate(prevDate.getDate() + (pw - 1) * 7 - ((prevDate.getDay() + 6) % 7));
+        const nextWeekDate = new Date(prevDate);
+        nextWeekDate.setDate(prevDate.getDate() + 7);
+        if (weekKey(nextWeekDate) === curr) {
+          run++;
+          if (run > longestStreak) longestStreak = run;
+        } else {
+          run = 1;
+        }
+      }
+    }
+
+    // 8. Rounds this month / this year
+    const now = new Date();
+    const roundsThisMonth = rounds.filter(r => {
+      const d = new Date(r.date);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    }).length;
+    const roundsThisYear = rounds.filter(r => new Date(r.date).getFullYear() === now.getFullYear()).length;
+
+    records = { bestRound, mostBirdies, bestHole, bestFront9, bestBack9, mostParOrBetter, currentStreak, longestStreak, roundsThisMonth, roundsThisYear };
   }
 
   const handleScore = (hole, val) => setScores(prev => ({ ...prev, [hole]: val }));
