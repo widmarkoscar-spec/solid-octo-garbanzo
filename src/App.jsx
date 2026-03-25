@@ -1,0 +1,1226 @@
+import { useState, useEffect } from "react";
+
+const COURSES = {
+  surahammar: {
+    id: "surahammar",
+    name: "Surahammars GK",
+    subtitle: "Mossfallets parkbana",
+    holes: [
+      { hole: 1,  par: 4, hcp: 16, name: "Hål 1"  },
+      { hole: 2,  par: 3, hcp: 10, name: "Hål 2"  },
+      { hole: 3,  par: 4, hcp: 4,  name: "Hål 3"  },
+      { hole: 4,  par: 5, hcp: 12, name: "Hål 4"  },
+      { hole: 5,  par: 4, hcp: 6,  name: "Hål 5"  },
+      { hole: 6,  par: 4, hcp: 14, name: "Hål 6"  },
+      { hole: 7,  par: 4, hcp: 2,  name: "Hål 7"  },
+      { hole: 8,  par: 5, hcp: 8,  name: "Hål 8"  },
+      { hole: 9,  par: 3, hcp: 18, name: "Hål 9"  },
+      { hole: 10, par: 4, hcp: 5,  name: "Hål 10" },
+      { hole: 11, par: 4, hcp: 15, name: "Hål 11" },
+      { hole: 12, par: 3, hcp: 13, name: "Hål 12" },
+      { hole: 13, par: 4, hcp: 9,  name: "Hål 13" },
+      { hole: 14, par: 5, hcp: 1,  name: "Hål 14" },
+      { hole: 15, par: 4, hcp: 7,  name: "Hål 15" },
+      { hole: 16, par: 3, hcp: 17, name: "Hål 16" },
+      { hole: 17, par: 5, hcp: 3,  name: "Hål 17" },
+      { hole: 18, par: 4, hcp: 11, name: "Hål 18" },
+    ],
+  },
+  angso: {
+    id: "angso",
+    name: "Ängsö GK",
+    subtitle: "Skogs- och parkbana vid Mälaren",
+    holes: [
+      { hole: 1,  par: 4, hcp: 10, name: "Hål 1"  },
+      { hole: 2,  par: 4, hcp: 6,  name: "Hål 2"  },
+      { hole: 3,  par: 3, hcp: 8,  name: "Hål 3"  },
+      { hole: 4,  par: 4, hcp: 2,  name: "Hål 4"  },
+      { hole: 5,  par: 5, hcp: 18, name: "Hål 5"  },
+      { hole: 6,  par: 4, hcp: 16, name: "Hål 6"  },
+      { hole: 7,  par: 5, hcp: 4,  name: "Hål 7"  },
+      { hole: 8,  par: 4, hcp: 14, name: "Hål 8"  },
+      { hole: 9,  par: 3, hcp: 12, name: "Hål 9"  },
+      { hole: 10, par: 5, hcp: 1,  name: "Hål 10" },
+      { hole: 11, par: 4, hcp: 17, name: "Hål 11" },
+      { hole: 12, par: 3, hcp: 9,  name: "Hål 12" },
+      { hole: 13, par: 4, hcp: 5,  name: "Hål 13" },
+      { hole: 14, par: 4, hcp: 11, name: "Hål 14" },
+      { hole: 15, par: 3, hcp: 7,  name: "Hål 15" },
+      { hole: 16, par: 4, hcp: 13, name: "Hål 16" },
+      { hole: 17, par: 4, hcp: 3,  name: "Hål 17" },
+      { hole: 18, par: 5, hcp: 15, name: "Hål 18" },
+    ],
+  },
+  fullero: {
+    id: "fullero",
+    name: "Fullerö GK",
+    subtitle: "Park- och skogsbana nära Västerås",
+    holes: [
+      { hole: 1,  par: 5, hcp: 8,  name: "Hål 1"  },
+      { hole: 2,  par: 5, hcp: 12, name: "Hål 2"  },
+      { hole: 3,  par: 3, hcp: 14, name: "Hål 3"  },
+      { hole: 4,  par: 4, hcp: 4,  name: "Hål 4"  },
+      { hole: 5,  par: 4, hcp: 16, name: "Hål 5"  },
+      { hole: 6,  par: 4, hcp: 2,  name: "Hål 6"  },
+      { hole: 7,  par: 3, hcp: 18, name: "Hål 7"  },
+      { hole: 8,  par: 4, hcp: 10, name: "Hål 8"  },
+      { hole: 9,  par: 4, hcp: 6,  name: "Hål 9"  },
+      { hole: 10, par: 4, hcp: 3,  name: "Hål 10" },
+      { hole: 11, par: 4, hcp: 7,  name: "Hål 11" },
+      { hole: 12, par: 3, hcp: 17, name: "Hål 12" },
+      { hole: 13, par: 5, hcp: 11, name: "Hål 13" },
+      { hole: 14, par: 4, hcp: 1,  name: "Hål 14" },
+      { hole: 15, par: 3, hcp: 15, name: "Hål 15" },
+      { hole: 16, par: 4, hcp: 9,  name: "Hål 16" },
+      { hole: 17, par: 5, hcp: 13, name: "Hål 17" },
+      { hole: 18, par: 4, hcp: 5,  name: "Hål 18" },
+    ],
+  },
+};
+
+const COURSE_LIST = [COURSES.surahammar, COURSES.angso, COURSES.fullero];
+
+const STORAGE_KEY = "sgk_rounds";
+
+const DARK = {
+  bgApp:"#030712", bgSecondary:"#0d1117", bgCard:"#0d1117", bgInput:"#161b22",
+  bgActive:"#052e16", bgDeep:"#0a0f16", bgBlueMid:"#070d18",
+  bgCircle:"#161b22", bgScoreBox:"#0f172a", bgSidebarBtn:"#0a0f16",
+  border:"#1e293b", borderStrong:"#334155", borderActive:"#4ade8033",
+  textPrimary:"#f8fafc", textSecondary:"#e2e8f0", textMuted:"#94a3b8",
+  textDim:"#475569", textFaint:"#334155", textGhost:"#1e293b",
+  accent:"#4ade80", accentDark:"#16a34a",
+  topbarBg:"#0d1117", topbarBorder:"#1e293b",
+  rowActive:"#0b1a10", rowExpand:"#070f07",
+};
+const LIGHT = {
+  bgApp:"#f0f4f0", bgSecondary:"#ffffff", bgCard:"#ffffff", bgInput:"#f8fafc",
+  bgActive:"#dcfce7", bgDeep:"#f1f5f9", bgBlueMid:"#f0f7ff",
+  bgCircle:"#f1f5f9", bgScoreBox:"#f1f5f9", bgSidebarBtn:"#f1f5f9",
+  border:"#e2e8f0", borderStrong:"#cbd5e1", borderActive:"#16a34a55",
+  textPrimary:"#0f172a", textSecondary:"#1e293b", textMuted:"#475569",
+  textDim:"#64748b", textFaint:"#94a3b8", textGhost:"#cbd5e1",
+  accent:"#16a34a", accentDark:"#15803d",
+  topbarBg:"#ffffff", topbarBorder:"#e2e8f0",
+  rowActive:"#f0fdf4", rowExpand:"#f8fafc",
+};
+
+let T = DARK;
+let HOLES = COURSES.surahammar.holes; // global, updated by GolfApp
+
+function parseMinGolfText(text) {
+  const SKIP = /^(hal|par|index|slag|j\.brutto|poang|out|in|total)/i;
+  const lines = text.trim().split("\n").map(l => l.trim()).filter(Boolean);
+  const nums = lines.filter(l => !SKIP.test(l)).map(l => parseInt(l)).filter(n => !isNaN(n));
+  const scores = {};
+  let i = 0, expectedHole = 1;
+  while (i < nums.length && expectedHole <= 18) {
+    if (nums[i] === expectedHole) {
+      if (i + 3 < nums.length) {
+        const slag = nums[i + 3];
+        if (slag > 0 && slag <= 15) scores[expectedHole] = slag;
+      }
+      expectedHole++;
+      i += 6;
+    } else {
+      i++;
+    }
+  }
+  return scores;
+}
+
+function getResult(score, par) {
+  if (!score) return null;
+  if (score === 1 && par === 3) return { label: "HIO", color: "#ff69b4", bg: "#1a0012" };
+  const diff = score - par;
+  const map = {
+    "-3": { label: "Albatross", color: "#FFD700", bg: "#1a1200" },
+    "-2": { label: "Eagle",    color: "#fbbf24", bg: "#2a1f00" },
+    "-1": { label: "Birdie",   color: "#4ade80", bg: "#052e16" },
+    "0":  { label: "Par",      color: "#94a3b8", bg: "#1e293b" },
+    "1":  { label: "Bogey",    color: "#fb923c", bg: "#1c0d00" },
+    "2":  { label: "Dubbel",   color: "#f87171", bg: "#1c0505" },
+    "3":  { label: "Trippel",  color: "#ef4444", bg: "#200000" },
+  };
+  const key = String(Math.max(-3, Math.min(3, diff)));
+  return map[key] || { label: "+" + diff, color: "#ef4444", bg: "#200000" };
+}
+
+function HoleRow({ holeData, score, putts, onScore, onPutts, onReady, active, onClick }) {
+  const result = getResult(score, holeData.par);
+  return (
+    <div style={{ borderBottom: "1px solid #0f172a" }}>
+      <div onClick={onClick} style={{ display: "grid", gridTemplateColumns: "36px 1fr 48px 48px 56px 56px", alignItems: "center", padding: "8px 12px", cursor: "pointer", background: active ? T.rowActive : "transparent", gap: 8 }}>
+        <div style={{ width: 30, height: 30, borderRadius: "50%", background: active ? T.bgActive : T.bgCircle, border: "2px solid " + (active ? T.accent : T.border), display: "flex", alignItems: "center", justifyContent: "center", color: active ? T.accent : T.textDim, fontSize: 13, fontWeight: 700 }}>
+          {holeData.hole}
+        </div>
+        <div>
+          <div style={{ fontSize: 13, color: T.textSecondary, fontWeight: 500 }}>{holeData.name}</div>
+          <div style={{ fontSize: 11, color: T.textFaint }}>Par {holeData.par} · HCP {holeData.hcp}</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          {result
+            ? <span style={{ fontSize: 10, fontWeight: 700, color: result.color, background: result.bg, padding: "2px 6px", borderRadius: 20, border: "1px solid " + result.color + "33", textTransform: "uppercase", whiteSpace: "nowrap" }}>{result.label}</span>
+            : <span style={{ color: T.textGhost, fontSize: 11 }}>-</span>
+          }
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ display: "inline-flex", width: 34, height: 34, borderRadius: 8, background: score ? T.bgScoreBox : T.bgSidebarBtn, border: "2px solid " + (score ? (result?.color || T.accent) : T.border), alignItems: "center", justifyContent: "center", color: score ? (result?.color || "#fff") : T.textFaint, fontSize: 16, fontWeight: 700 }}>
+            {score || "-"}
+          </div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          {putts > 0
+            ? <span style={{ fontSize: 13, color: "#60a5fa", fontWeight: 700 }}>{putts}</span>
+            : <span style={{ color: T.textGhost, fontSize: 11 }}>-</span>
+          }
+        </div>
+        <div style={{ textAlign: "right", color: active ? T.accent : T.textGhost, fontSize: 14 }}>
+          {active ? "▲" : "▼"}
+        </div>
+      </div>
+      {active && (
+        <div style={{ padding: "12px 16px 16px", background: T.rowExpand, borderTop: "1px solid " + T.border }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: 11, color: T.textDim, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Antal slag</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {[1,2,3,4,5,6,7,8,9,10].map(v => (
+                  <button key={v} onClick={() => onScore(v)} style={{ width: 40, height: 40, borderRadius: "50%", border: score === v ? "2px solid " + T.accent : "2px solid " + T.border, background: score === v ? T.bgActive : T.bgCard, color: score === v ? T.accent : T.textDim, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{v}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: T.textDim, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Antal puttar</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button onClick={() => putts > 0 && onPutts(putts - 1)} style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid " + T.border, background: T.bgCard, color: T.textMuted, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>-</button>
+                <div style={{ width: 40, textAlign: "center", fontSize: 22, fontWeight: 700, color: putts > 0 ? "#60a5fa" : T.textFaint }}>{putts > 0 ? putts : "-"}</div>
+                <button onClick={() => putts < 6 && onPutts(putts + 1)} style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid " + T.border, background: T.bgCard, color: T.textMuted, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+              </div>
+            </div>
+            {score > 0 && putts > 0 && (
+              <div style={{ marginLeft: "auto", alignSelf: "flex-end" }}>
+                <button onClick={onReady} style={{ padding: "10px 28px", background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  {holeData.hole < 18 ? "Nästa hål →" : "Avsluta ronden ✓"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EditHoleRow({ holeData, score, putts, onScore, onPutts, open, onToggle }) {
+  const result = getResult(score, holeData.par);
+  return (
+    <div style={{ borderBottom: "1px solid #0f172a" }}>
+      <div onClick={onToggle} style={{ display: "grid", gridTemplateColumns: "32px 1fr 44px 44px 44px", gap: 8, padding: "8px 12px", cursor: "pointer", background: open ? T.rowActive : "transparent", alignItems: "center" }}>
+        <div style={{ width: 26, height: 26, borderRadius: "50%", background: open ? T.bgActive : T.bgCircle, border: "2px solid " + (open ? T.accent : T.border), display: "flex", alignItems: "center", justifyContent: "center", color: open ? T.accent : T.textDim, fontSize: 12, fontWeight: 700 }}>{holeData.hole}</div>
+        <div>
+          <div style={{ fontSize: 12, color: T.textSecondary }}>{holeData.name}</div>
+          <div style={{ fontSize: 10, color: T.textFaint }}>Par {holeData.par}</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          {result && <span style={{ fontSize: 9, fontWeight: 700, color: result.color, background: result.bg, padding: "1px 5px", borderRadius: 10, border: "1px solid " + result.color + "33", textTransform: "uppercase" }}>{result.label}</span>}
+        </div>
+        <div style={{ textAlign: "center", fontSize: 15, fontWeight: 700, color: score ? (result ? result.color : "#fff") : T.textFaint }}>{score || "-"}</div>
+        <div style={{ textAlign: "center", fontSize: 13, color: putts > 0 ? "#60a5fa" : T.textFaint, fontWeight: 700 }}>{putts > 0 ? putts : "-"}</div>
+      </div>
+      {open && (
+        <div style={{ padding: "10px 14px 14px", background: T.rowExpand, borderTop: "1px solid " + T.border }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: 10, color: T.textDim, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Slag</div>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                {[1,2,3,4,5,6,7,8,9,10].map(v => (
+                  <button key={v} onClick={() => onScore(v)} style={{ width: 34, height: 34, borderRadius: "50%", border: score === v ? "2px solid " + T.accent : "2px solid " + T.border, background: score === v ? T.bgActive : T.bgCard, color: score === v ? T.accent : T.textDim, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{v}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: T.textDim, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Puttar</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button onClick={() => putts > 0 && onPutts(putts - 1)} style={{ width: 30, height: 30, borderRadius: "50%", border: "1px solid " + T.border, background: T.bgCard, color: T.textMuted, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>-</button>
+                <div style={{ width: 36, textAlign: "center", fontSize: 18, fontWeight: 700, color: putts > 0 ? "#60a5fa" : T.textFaint }}>{putts > 0 ? putts : "-"}</div>
+                <button onClick={() => putts < 6 && onPutts(putts + 1)} style={{ width: 30, height: 30, borderRadius: "50%", border: "1px solid " + T.border, background: T.bgCard, color: T.textMuted, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatBar({ label, count, color, pct }) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+        <span style={{ color: T.textMuted, fontSize: 13 }}>{label}</span>
+        <span style={{ color, fontSize: 13, fontWeight: 700 }}>{count}</span>
+      </div>
+      <div style={{ height: 5, background: T.border, borderRadius: 4 }}>
+        <div style={{ height: "100%", width: pct + "%", background: color, borderRadius: 4, transition: "width 0.4s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+function HistoryChart({ rounds }) {
+  if (rounds.length === 0) return (
+    <div style={{ textAlign: "center", padding: "32px 0", color: T.textFaint, fontSize: 13 }}>Inga avslutade ronder ännu</div>
+  );
+  const W = 500, H = 160, PL = 44, PR = 16, PT = 16, PB = 28;
+  const cW = W - PL - PR, cH = H - PT - PB;
+  const sc = rounds.map(r => r.totalScore);
+  const minS = Math.min(...sc) - 2, maxS = Math.max(...sc) + 2;
+  const range = maxS - minS || 1;
+  const toX = i => PL + (i / Math.max(sc.length - 1, 1)) * cW;
+  const toY = v => PT + cH - ((v - minS) / range) * cH;
+  const pts = sc.map((s, i) => [toX(i), toY(s)]);
+  const lp = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+  const ap = lp + " L" + pts[pts.length-1][0].toFixed(1) + "," + (PT+cH).toFixed(1) + " L" + pts[0][0].toFixed(1) + "," + (PT+cH).toFixed(1) + " Z";
+  const grid = [0,1,2,3,4].map(i => ({ val: Math.round(minS + (range/4)*i), y: toY(Math.round(minS + (range/4)*i)) }));
+  return (
+    <svg viewBox={"0 0 " + W + " " + H} style={{ width: "100%", overflow: "visible" }}>
+      <defs>
+        <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#4ade80" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {grid.map(g => (
+        <g key={g.val}>
+          <line x1={PL} y1={g.y} x2={W-PR} y2={g.y} stroke={T.border} strokeWidth="1" />
+          <text x={PL-6} y={g.y+4} textAnchor="end" fontSize="9" fill={T.textDim}>{g.val}</text>
+        </g>
+      ))}
+      {minS <= 72 && 72 <= maxS && (
+        <line x1={PL} y1={toY(72)} x2={W-PR} y2={toY(72)} stroke={T.borderStrong} strokeWidth="1" strokeDasharray="4 3" />
+      )}
+      <path d={ap} fill="url(#ag)" />
+      <path d={lp} fill="none" stroke="#4ade80" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map((p, i) => (
+        <g key={i}>
+          <circle cx={p[0]} cy={p[1]} r={4} fill="#4ade80" stroke="#030712" strokeWidth="2" />
+          <text x={p[0]} y={p[1]-8} textAnchor="middle" fontSize="9" fill={T.textMuted}>{sc[i]}</text>
+        </g>
+      ))}
+      {pts.map((p, i) => (
+        <text key={i} x={p[0]} y={H-4} textAnchor="middle" fontSize="9" fill={T.textDim}>{rounds[i].dateLabel}</text>
+      ))}
+    </svg>
+  );
+}
+
+function ResultDonut({ dist }) {
+  const CATS = [
+    { key: "hio",       label: "HIO",      color: "#ff69b4", val: dist.hio },
+    { key: "albatross", label: "Albatross", color: "#FFD700", val: dist.albatross },
+    { key: "eagle",     label: "Eagle",     color: "#fbbf24", val: dist.eagle },
+    { key: "birdie",    label: "Birdie",    color: "#4ade80", val: dist.birdie },
+    { key: "par",       label: "Par",       color: "#94a3b8", val: dist.par },
+    { key: "bogey",     label: "Bogey",     color: "#60a5fa", val: dist.bogey },
+    { key: "double",    label: "Dubbel",    color: "#fb923c", val: dist.double },
+    { key: "worse",     label: "Trippel+",  color: "#ef4444", val: dist.worse },
+  ].filter(c => c.val > 0);
+  if (CATS.length === 0) return (
+    <div style={{ textAlign: "center", padding: "24px 0", color: T.textFaint, fontSize: 13 }}>Registrera resultat för att se fördelning</div>
+  );
+  const total = CATS.reduce((s, c) => s + c.val, 0);
+  const R = 60, ri = 38, cx = 70, cy = 70;
+  let angle = -Math.PI / 2;
+  const slices = CATS.map(c => {
+    const sweep = (c.val / total) * 2 * Math.PI;
+    const x1 = cx + R * Math.cos(angle), y1 = cy + R * Math.sin(angle);
+    angle += sweep;
+    const x2 = cx + R * Math.cos(angle), y2 = cy + R * Math.sin(angle);
+    const xi1 = cx + ri * Math.cos(angle), yi1 = cy + ri * Math.sin(angle);
+    const xi2 = cx + ri * Math.cos(angle - sweep), yi2 = cy + ri * Math.sin(angle - sweep);
+    const large = sweep > Math.PI ? 1 : 0;
+    const d = "M" + x1.toFixed(2) + "," + y1.toFixed(2) + " A" + R + "," + R + " 0 " + large + ",1 " + x2.toFixed(2) + "," + y2.toFixed(2) + " L" + xi1.toFixed(2) + "," + yi1.toFixed(2) + " A" + ri + "," + ri + " 0 " + large + ",0 " + xi2.toFixed(2) + "," + yi2.toFixed(2) + " Z";
+    return { ...c, d };
+  });
+  return (
+    <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
+      <svg width="140" height="140" viewBox="0 0 140 140" style={{ flexShrink: 0 }}>
+        {slices.map(s => <path key={s.key} d={s.d} fill={s.color} opacity="0.9" />)}
+        <text x="70" y="66" textAnchor="middle" fontSize="20" fontWeight="900" fill={T.textPrimary} fontFamily="serif">{total}</text>
+        <text x="70" y="80" textAnchor="middle" fontSize="10" fill={T.textDim}>hål spelade</text>
+      </svg>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px" }}>
+          {CATS.map(c => (
+            <div key={c.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 2, background: c.color, flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 13, color: T.textMuted }}>{c.label}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: c.color }}>{c.val}</span>
+              <span style={{ fontSize: 12, color: T.textDim, width: 36, textAlign: "right" }}>{Math.round((c.val / total) * 100)}%</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 16, marginTop: 16, paddingTop: 14, borderTop: "1px solid " + T.border }}>
+          {[["Under par", dist.hio + dist.albatross + dist.eagle + dist.birdie, "#4ade80"], ["Par", dist.par, "#94a3b8"], ["Över par", dist.bogey + dist.double + dist.worse, "#f87171"]].map(e => (
+            <div key={e[0]} style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: e[2] }}>{e[1]}</div>
+              <div style={{ fontSize: 11, color: T.textDim }}>{e[0]}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ textAlign: "center", padding: "8px 0", fontSize: 10, color: T.textGhost, letterSpacing: 1, userSelect: "none" }}>
+        Slagbok · Skapad av Oscar Widmark
+      </div>
+    </div>
+  );
+}
+
+function HoleAvgTable({ rounds }) {
+  if (rounds.length === 0) return (
+    <div style={{ textAlign: "center", padding: "16px 0", color: T.textFaint, fontSize: 13 }}>Inga sparade ronder ännu</div>
+  );
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+      {HOLES.map(hole => {
+        const allSc = rounds.map(r => r.scores[hole.hole]).filter(Boolean);
+        const avg = allSc.length > 0 ? allSc.reduce((s, v) => s + v, 0) / allSc.length : null;
+        const diff = avg !== null ? avg - hole.par : null;
+        const diffStr = diff === null ? "-" : diff > 0 ? "+" + diff.toFixed(2) : diff.toFixed(2);
+        const diffColor = diff === null ? T.textFaint : diff < 0 ? "#4ade80" : diff > 0 ? "#f87171" : "#94a3b8";
+        return (
+          <div key={hole.hole} style={{ background: T.bgSidebarBtn, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", background: T.bgCircle, border: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: T.textDim, fontWeight: 700, flexShrink: 0 }}>{hole.hole}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, color: T.textFaint }}>Par {hole.par}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: T.textSecondary }}>{avg !== null ? avg.toFixed(2) : "-"}</div>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: diffColor }}>{diffStr}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ImportModal({ onClose, onImport, courseId, setCourseId }) {
+  const [text, setText] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [name, setName] = useState("");
+  const [preview, setPreview] = useState(null);
+  const [error, setError] = useState("");
+
+  function handleParse() {
+    setError("");
+    const parsed = parseMinGolfText(text);
+    if (Object.keys(parsed).length === 0) {
+      setError("Kunde inte tolka texten. Klistra in texten direkt från Min Golf scorekort.");
+      return;
+    }
+    setPreview(parsed);
+  }
+
+  function handleImport() {
+    if (!preview) return;
+    const d = new Date(date);
+    const dateLabel = d.getDate() + "/" + (d.getMonth() + 1);
+    const totalScore = HOLES.reduce((s, h) => s + (preview[h.hole] || 0), 0);
+    const importCourse = COURSES[courseId] || COURSES.surahammar;
+    onImport({ id: Date.now(), date: new Date(date).toISOString(), dateLabel, playerName: name, courseId, courseName: importCourse.name, totalScore, totalPutts: 0, scores: { ...preview }, putts: {} });
+    onClose();
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#000000bb", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 16, padding: 32, width: 600, maxHeight: "85vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: T.textPrimary }}>Importera från Min Golf</div>
+            <div style={{ fontSize: 13, color: T.textDim, marginTop: 4 }}>Klistra in texten från ditt scorekort på mingolf.golf.se</div>
+          </div>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: 20, cursor: "pointer" }}>×</button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+          <div>
+            <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Datum</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Spelarnamn</label>
+            <input placeholder="Ditt namn" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }} />
+          </div>
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Bana</label>
+          <div style={{ display: "flex", gap: 6 }}>
+            {COURSE_LIST.map(course => (
+              <button key={course.id} onClick={() => setCourseId(course.id)} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, border: "2px solid " + (courseId === course.id ? T.accent : T.border), background: courseId === course.id ? T.bgActive : T.bgInput, color: courseId === course.id ? T.accent : T.textSecondary, fontSize: 11, fontWeight: courseId === course.id ? 700 : 400, cursor: "pointer", textAlign: "center" }}>
+                {course.name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Klistra in text från Min Golf</label>
+          <textarea value={text} onChange={e => { setText(e.target.value); setPreview(null); setError(""); }} style={{ width: "100%", height: 160, padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 13, fontFamily: "monospace", resize: "vertical" }} />
+        </div>
+        {error && (
+          <div style={{ color: "#f87171", fontSize: 13, marginBottom: 12, padding: "8px 12px", background: "#1c0505", borderRadius: 8, border: "1px solid #ef444433" }}>{error}</div>
+        )}
+        {!preview ? (
+          <button onClick={handleParse} style={{ width: "100%", padding: 12, background: T.bgDeep, border: "1px solid " + T.border, borderRadius: 10, color: T.textSecondary, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Tolka text</button>
+        ) : (
+          <div>
+            <div style={{ marginBottom: 16, padding: "12px 16px", background: "#052e16", border: "1px solid #4ade8033", borderRadius: 10 }}>
+              <div style={{ fontSize: 13, color: "#4ade80", fontWeight: 600, marginBottom: 8 }}>Hittade {Object.keys(preview).length} hål — granska nedan</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(9, 1fr)", gap: 4 }}>
+                {HOLES.map(hole => {
+                  const sc = preview[hole.hole];
+                  const res = getResult(sc, hole.par);
+                  return (
+                    <div key={hole.hole} style={{ textAlign: "center", background: sc ? res?.bg : T.bgCircle, borderRadius: 6, padding: "6px 4px", border: "1px solid " + (sc ? res?.color + "44" : T.border) }}>
+                      <div style={{ fontSize: 9, color: T.textDim }}>Hål {hole.hole}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: sc ? res?.color : T.textFaint }}>{sc || "-"}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: 12, fontSize: 13, color: T.textMuted }}>
+                Total score: <strong style={{ color: T.textPrimary }}>{HOLES.reduce((s, h) => s + (preview[h.hole] || 0), 0)}</strong>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setPreview(null)} style={{ flex: 1, padding: 12, background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.textDim, fontSize: 14, cursor: "pointer" }}>Ändra</button>
+              <button onClick={handleImport} style={{ flex: 2, padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Importera rond</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DeleteRoundButton({ onDelete }) {
+  const [confirming, setConfirming] = useState(false);
+  if (confirming) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ fontSize: 12, color: "#f87171", whiteSpace: "nowrap" }}>Är du säker?</span>
+        <button onClick={() => { onDelete(); setConfirming(false); }} style={{ padding: "6px 12px", background: "#200000", border: "1px solid #ef444455", borderRadius: 8, color: "#f87171", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ja, ta bort</button>
+        <button onClick={() => setConfirming(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid " + T.border, borderRadius: 8, color: T.textDim, fontSize: 12, cursor: "pointer" }}>Avbryt</button>
+      </div>
+    );
+  }
+  return (
+    <button onClick={() => setConfirming(true)} style={{ padding: "8px 14px", background: "transparent", border: "1px solid " + T.border, borderRadius: 8, color: T.textFaint, fontSize: 13, cursor: "pointer" }}>Ta bort</button>
+  );
+}
+
+export default function GolfApp() {
+  const [scores, setScores]         = useState({});
+  const [putts, setPutts]           = useState({});
+  const [activeHole, setActiveHole] = useState(1);
+  const [view, setView]             = useState("scorecard");
+  const [playerName, setPlayerName] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [rounds, setRounds]         = useState([]);
+  const [storageReady, setStorageReady] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("");
+  const [darkMode, setDarkMode]     = useState(() => {
+    try { return localStorage.getItem("sgk_theme") !== "light"; } catch { return true; }
+  });
+  const [showImport, setShowImport] = useState(false);
+  const [editingRound, setEditingRound] = useState(null);
+  const [editScores, setEditScores] = useState({});
+  const [editPutts, setEditPutts]   = useState({});
+  const [editOpenHole, setEditOpenHole] = useState(null);
+  const [statsYear, setStatsYear]   = useState("all");
+  const [statsCourse, setStatsCourse] = useState("all");
+  const [putt10, setPutt10]           = useState(false);
+  const [gir10, setGir10]             = useState(false);
+  const [hist10, setHist10]           = useState(false);
+  const [avg10, setAvg10]             = useState(false);
+  const [courseId, setCourseId]     = useState(() => {
+    try { return localStorage.getItem("sgk_course") || "surahammar"; } catch { return "surahammar"; }
+  });
+  const [updateMsg, setUpdateMsg] = useState(null);
+
+  T = darkMode ? DARK : LIGHT;
+  const COURSE = COURSES[courseId] || COURSES.surahammar;
+  HOLES = COURSE.holes; // update global
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setRounds(JSON.parse(saved));
+    } catch {}
+    setStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(rounds)); } catch {}
+  }, [rounds, storageReady]);
+
+  useEffect(() => {
+    try { localStorage.setItem("sgk_theme", darkMode ? "dark" : "light"); } catch {}
+  }, [darkMode]);
+
+  useEffect(() => {
+    try { localStorage.setItem("sgk_course", courseId); } catch {}
+  }, [courseId]);
+
+  useEffect(() => {
+    window.electronAPI?.onUpdateStatus((msg) => setUpdateMsg(msg));
+  }, []);
+
+  const saveRounds = (updated) => {
+    setRounds(updated);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch {}
+  };
+
+  const front9  = HOLES.slice(0, 9);
+  const back9   = HOLES.slice(9);
+  const playedHoles = Object.keys(scores).length;
+  const totalScore  = HOLES.reduce((s, h) => s + (scores[h.hole] || 0), 0);
+  const totalPar    = HOLES.reduce((s, h) => scores[h.hole] ? s + h.par : s, 0);
+  const scoreToPar  = totalScore - totalPar;
+  const totalPutts  = Object.values(putts).reduce((s, p) => s + p, 0);
+  const f9Score = front9.reduce((s, h) => s + (scores[h.hole] || 0), 0);
+  const b9Score = back9.reduce((s, h)  => s + (scores[h.hole] || 0), 0);
+  const f9Par   = front9.reduce((s, h) => s + h.par, 0);
+  const b9Par   = back9.reduce((s, h)  => s + h.par, 0);
+  const f9Putts = front9.reduce((s, h) => s + (putts[h.hole] || 0), 0);
+  const b9Putts = back9.reduce((s, h)  => s + (putts[h.hole] || 0), 0);
+  const scoreColor = scoreToPar < 0 ? "#4ade80" : scoreToPar > 0 ? "#f87171" : "#94a3b8";
+  const scoreLabel = scoreToPar > 0 ? "+" + scoreToPar : scoreToPar !== 0 ? String(scoreToPar) : "E";
+
+  const availableYears = [...new Set(rounds.map(r => new Date(r.date).getFullYear()))].sort((a, b) => b - a);
+  const filteredRounds = rounds.filter(r => {
+    const yearMatch   = statsYear === "all" || new Date(r.date).getFullYear() === parseInt(statsYear);
+    const courseMatch = statsCourse === "all" || (r.courseId || "surahammar") === statsCourse;
+    return yearMatch && courseMatch;
+  });
+
+  const dist = { hio: 0, albatross: 0, eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0, worse: 0 };
+  // 10 senaste ronder inom filtret
+  const last10Rounds = filteredRounds.slice(-10);
+
+  filteredRounds.forEach(round => {
+    HOLES.forEach(h => {
+      const s = round.scores[h.hole]; if (!s) return;
+      if (s === 1 && h.par === 3) { dist.hio++; return; }
+      const d = s - h.par;
+      if (d <= -3) dist.albatross++;
+      else if (d === -2) dist.eagle++;
+      else if (d === -1) dist.birdie++;
+      else if (d === 0)  dist.par++;
+      else if (d === 1)  dist.bogey++;
+      else if (d === 2)  dist.double++;
+      else               dist.worse++;
+    });
+  });
+
+  const allPuttVals    = filteredRounds.flatMap(r => Object.values(r.putts || {})).filter(p => p > 0);
+  const holesWithPutts = allPuttVals.length;
+  const allTotalPutts  = allPuttVals.reduce((s, p) => s + p, 0);
+  const avgPutts       = holesWithPutts > 0 ? (allTotalPutts / holesWithPutts).toFixed(1) : "-";
+  const avgPuttsPerRound = filteredRounds.length > 0
+    ? (filteredRounds.reduce((s, r) => s + Object.values(r.putts || {}).reduce((a, p) => a + p, 0), 0) / filteredRounds.length).toFixed(1)
+    : "-";
+  const oneP   = allPuttVals.filter(p => p === 1).length;
+  const twoP   = allPuttVals.filter(p => p === 2).length;
+  const threeP = allPuttVals.filter(p => p >= 3).length;
+
+  let girHoles = 0, girTotal = 0;
+  filteredRounds.forEach(round => {
+    HOLES.forEach(h => {
+      const s = round.scores[h.hole];
+      const p = (round.putts || {})[h.hole];
+      if (!s || !p) return;
+      girTotal++;
+      if ((s - p) <= (h.par - 2)) girHoles++;
+    });
+  });
+  const girPct = girTotal > 0 ? Math.round((girHoles / girTotal) * 100) : null;
+
+  const n = filteredRounds.length || 1;
+  const allF9Score    = filteredRounds.length > 0 ? +(filteredRounds.reduce((s, r) => s + HOLES.slice(0,9).reduce((a, h) => a + (r.scores[h.hole] || 0), 0), 0) / n).toFixed(1) : 0;
+  const allB9Score    = filteredRounds.length > 0 ? +(filteredRounds.reduce((s, r) => s + HOLES.slice(9).reduce((a, h) => a + (r.scores[h.hole] || 0), 0), 0) / n).toFixed(1) : 0;
+  const allF9Par      = HOLES.slice(0,9).reduce((s, h) => s + h.par, 0);
+  const allB9Par      = HOLES.slice(9).reduce((s, h) => s + h.par, 0);
+  const allF9Putts    = filteredRounds.length > 0 ? +(filteredRounds.reduce((s, r) => s + HOLES.slice(0,9).reduce((a, h) => a + ((r.putts||{})[h.hole] || 0), 0), 0) / n).toFixed(1) : 0;
+  const allB9Putts    = filteredRounds.length > 0 ? +(filteredRounds.reduce((s, r) => s + HOLES.slice(9).reduce((a, h) => a + ((r.putts||{})[h.hole] || 0), 0), 0) / n).toFixed(1) : 0;
+  const allTotalScore = filteredRounds.length > 0 ? +(filteredRounds.reduce((s, r) => s + r.totalScore, 0) / n).toFixed(1) : 0;
+  // Par per round can vary by course — sum actual pars
+  const allTotalPar = HOLES.reduce((s, h) => s + h.par, 0);
+  const allRoundsPutts = filteredRounds.length > 0 ? +(filteredRounds.reduce((s, r) => s + (r.totalPutts || 0), 0) / n).toFixed(1) : 0;
+
+  const handleScore = (hole, val) => setScores(prev => ({ ...prev, [hole]: val }));
+  const handlePutts = (hole, val) => setPutts(prev => ({ ...prev, [hole]: val }));
+  const handleReady = (hole) => {
+    if (hole < 18) setTimeout(() => setActiveHole(hole + 1), 150);
+    else doSaveRound(scores, putts);
+  };
+
+  const doSaveRound = (sc, pt) => {
+    const roundTotal = HOLES.reduce((s, h) => s + (sc[h.hole] || 0), 0);
+    const roundPutts = Object.values(pt).reduce((s, p) => s + p, 0);
+    const now = new Date();
+    const newRound = {
+      id: Date.now(), date: now.toISOString(),
+      dateLabel: now.getDate() + "/" + (now.getMonth() + 1),
+      playerName, courseId, courseName: COURSE.name,
+      totalScore: roundTotal, totalPutts: roundPutts,
+      scores: { ...sc }, putts: { ...pt },
+    };
+    const updated = [...rounds, newRound];
+    setRounds(updated);
+    setSaveStatus("saving");
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); setSaveStatus("saved"); setTimeout(() => setSaveStatus(""), 2500); }
+    catch { setSaveStatus("error"); }
+  };
+
+  const startNewRound = () => { setScores({}); setPutts({}); setActiveHole(1); setView("scorecard"); };
+  const clearHistory  = () => { setRounds([]); try { localStorage.removeItem(STORAGE_KEY); } catch {} };
+
+  const startEditRound = (round) => {
+    setEditScores({ ...round.scores });
+    setEditPutts({ ...round.putts });
+    setEditOpenHole(null);
+    setEditingRound(round.id);
+  };
+
+  const saveEditRound = () => {
+    const sc = { ...editScores };
+    const pt = { ...editPutts };
+    const roundTotal = HOLES.reduce((s, h) => s + (sc[h.hole] || 0), 0);
+    const roundPutts = Object.values(pt).reduce((s, p) => s + p, 0);
+    saveRounds(rounds.map(r => r.id === editingRound ? { ...r, scores: sc, putts: pt, totalScore: roundTotal, totalPutts: roundPutts } : r));
+    setSaveStatus("saved");
+    setTimeout(() => setSaveStatus(""), 2500);
+    setEditingRound(null);
+  };
+
+  const editRound    = rounds.find(r => r.id === editingRound);
+  const editTotal    = HOLES.reduce((s, h) => s + (editScores[h.hole] || 0), 0);
+  const editTotalPar = HOLES.reduce((s, h) => editScores[h.hole] ? s + h.par : s, 0);
+  const editDiff     = editTotal - editTotalPar;
+  const editPutTotal = Object.values(editPutts).reduce((s, p) => s + p, 0);
+
+  return (
+    <div style={{ minHeight: "100vh", background: T.bgApp, fontFamily: "system-ui, sans-serif", color: T.textSecondary, display: "flex", flexDirection: "column" }}>
+
+      {updateMsg && (
+        <div style={{ background: updateMsg.type === "downloaded" ? "#2a7d4f" : "#1a5276", color: "#fff", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 14 }}>
+          <span>
+            {updateMsg.type === "available" && "Ny uppdatering hittades – laddar ner…"}
+            {updateMsg.type === "downloaded" && "Uppdatering nedladdad och klar att installera!"}
+          </span>
+          {updateMsg.type === "downloaded" && (
+            <button
+              onClick={() => window.electronAPI.installUpdate()}
+              style={{ background: "#fff", color: "#2a7d4f", border: "none", borderRadius: 6, padding: "4px 14px", cursor: "pointer", fontWeight: 600 }}
+            >
+              Starta om och installera
+            </button>
+          )}
+        </div>
+      )}
+
+      {showImport && (
+        <ImportModal
+          onClose={() => setShowImport(false)}
+          onImport={(round) => { const updated = [...rounds, round]; saveRounds(updated); setSaveStatus("saved"); setTimeout(() => setSaveStatus(""), 2500); }}
+          courseId={courseId}
+          setCourseId={setCourseId}
+        />
+      )}
+
+      {showSettings && (
+        <div style={{ position: "fixed", inset: 0, background: "#000000bb", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 16, padding: 32, width: 440 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div>
+              <div style={{ fontSize: 11, color: T.accent, letterSpacing: 2, textTransform: "uppercase", fontWeight: 600 }}>Slagbok</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: T.textPrimary }}>Inställningar</div>
+            </div>
+              <button onClick={() => setShowSettings(false)} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: 20, cursor: "pointer" }}>×</button>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 11, color: T.textDim, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Spelarnamn</label>
+              <input
+                placeholder="Ditt namn (valfritt)"
+                value={playerName}
+                onChange={e => setPlayerName(e.target.value)}
+                style={{ width: "100%", padding: "10px 14px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14, outline: "none" }}
+              />
+            </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: "block", fontSize: 11, color: T.textDim, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Aktiv bana</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {COURSE_LIST.map(course => (
+                  <button key={course.id} onClick={() => setCourseId(course.id)} style={{ padding: "10px 14px", borderRadius: 8, border: "2px solid " + (courseId === course.id ? T.accent : T.border), background: courseId === course.id ? T.bgActive : T.bgInput, color: courseId === course.id ? T.accent : T.textSecondary, fontSize: 13, fontWeight: courseId === course.id ? 700 : 400, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>{course.name}</span>
+                    <span style={{ fontSize: 11, color: courseId === course.id ? T.accent : T.textFaint }}>{course.subtitle}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button onClick={() => setShowSettings(false)} style={{ width: "100%", padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+              Spara och stäng
+            </button>
+          </div>
+        </div>
+      )}
+
+      {saveStatus && (
+        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 999, padding: "10px 24px", borderRadius: 20, pointerEvents: "none", background: saveStatus === "saved" ? "#052e16" : "#200000", border: "1px solid " + (saveStatus === "saved" ? "#4ade80" : "#ef4444"), color: saveStatus === "saved" ? "#4ade80" : "#ef4444", fontSize: 14, fontWeight: 600 }}>
+          {saveStatus === "saving" ? "Sparar..." : saveStatus === "saved" ? "✓ Rond sparad!" : "⚠ Kunde inte spara"}
+        </div>
+      )}
+
+      <div style={{ background: T.topbarBg, borderBottom: "1px solid " + T.topbarBorder, padding: "0 32px", display: "flex", alignItems: "center", gap: 32, height: 56, flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 20 }}>⛳</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: T.textPrimary, letterSpacing: 1 }}>Slagbok</div>
+            <div style={{ fontSize: 10, color: T.accent, letterSpacing: 2, textTransform: "uppercase", fontWeight: 600 }}>{COURSE.name}</div>
+          </div>
+        </div>
+        <div style={{ width: 1, height: 24, background: T.border }} />
+        <span style={{ fontSize: 16, color: T.textMuted }}>
+          {playerName || "Din rond"}
+          {playedHoles > 0 && <span style={{ color: scoreColor, marginLeft: 8 }}>{scoreLabel}</span>}
+        </span>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 24, alignItems: "center" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary, lineHeight: 1 }}>{totalScore || "-"}</div>
+            <div style={{ fontSize: 10, color: T.textFaint }}>total</div>
+          </div>
+          {totalPutts > 0 && (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#60a5fa", lineHeight: 1 }}>{totalPutts}</div>
+              <div style={{ fontSize: 10, color: T.textFaint }}>puttar</div>
+            </div>
+          )}
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: T.textDim, lineHeight: 1 }}>{playedHoles}/18</div>
+            <div style={{ fontSize: 10, color: T.textFaint }}>hål</div>
+          </div>
+          <button onClick={() => setShowSettings(true)} title="Inställningar" style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + T.border, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: T.textDim, flexShrink: 0 }}>⚙</button>
+          <button onClick={() => setDarkMode(d => !d)} style={{ width: 40, height: 24, borderRadius: 12, background: darkMode ? "#1e293b" : "#d1fae5", border: "1px solid " + (darkMode ? "#334155" : "#6ee7b7"), cursor: "pointer", position: "relative", flexShrink: 0 }}>
+            <div style={{ position: "absolute", top: 2, left: darkMode ? 18 : 2, width: 18, height: 18, borderRadius: "50%", background: darkMode ? "#4ade80" : "#16a34a", transition: "left 0.25s", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>
+              {darkMode ? "🌙" : "☀"}
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+
+        <div style={{ width: 220, background: T.bgSecondary, borderRight: "1px solid " + T.topbarBorder, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+          <div style={{ padding: "16px 12px" }}>
+            {[["scorecard","Scorekort","📋"],["stats","Statistik","📊"],["history","Historik","🕒"]].map(tab => (
+              <button key={tab[0]} onClick={() => { setView(tab[0]); setEditingRound(null); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 4, background: view === tab[0] ? T.bgActive : "transparent", border: "1px solid " + (view === tab[0] ? T.borderActive : "transparent"), borderRadius: 8, color: view === tab[0] ? T.accent : T.textDim, fontSize: 13, fontWeight: view === tab[0] ? 700 : 400, cursor: "pointer", textAlign: "left" }}>
+                <span>{tab[2]}</span><span>{tab[1]}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ height: 1, background: T.border, margin: "0 12px" }} />
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+            <div style={{ fontSize: 10, color: T.textFaint, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Översikt</div>
+            {[front9, back9].map((group, gi) => (
+              <div key={gi} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 10, color: T.textGhost, letterSpacing: 1, paddingLeft: 4, marginBottom: 4 }}>{gi === 0 ? "FRONT 9" : "BACK 9"}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4 }}>
+                  {group.map(hole => {
+                    const sc = scores[hole.hole];
+                    const res = getResult(sc, hole.par);
+                    return (
+                      <button key={hole.hole} onClick={() => { setView("scorecard"); setActiveHole(hole.hole); }} style={{ padding: "6px 4px", borderRadius: 6, border: "1px solid " + (activeHole === hole.hole && view === "scorecard" ? T.accent : T.border), background: sc ? res?.bg : T.bgCircle, cursor: "pointer", textAlign: "center" }}>
+                        <div style={{ fontSize: 10, color: T.textFaint }}>{hole.hole}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: sc ? (res?.color || "#fff") : T.textGhost }}>{sc || "-"}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "12px", borderTop: "1px solid " + T.border }}>
+            {[["Front 9", f9Score, f9Par], ["Back 9", b9Score, b9Par]].map(row => (
+              <div key={row[0]} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 4px" }}>
+                <span style={{ fontSize: 12, color: T.textFaint }}>{row[0]}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: row[1] ? (row[1]-row[2] < 0 ? "#4ade80" : row[1]-row[2] > 0 ? "#f87171" : "#94a3b8") : T.textGhost }}>{row[1] || "-"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", background: T.bgApp }}>
+
+          {view === "scorecard" && (
+            <div style={{ padding: "24px 32px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "36px 1fr 48px 48px 56px 56px", gap: 8, padding: "0 12px", marginBottom: 8 }}>
+                {["","Hål","Resultat","Slag","Puttar",""].map((h, i) => (
+                  <div key={i} style={{ fontSize: 10, color: T.textFaint, letterSpacing: 1, textTransform: "uppercase", textAlign: i >= 2 ? "center" : "left" }}>{h}</div>
+                ))}
+              </div>
+              {[0, 1].map(section => {
+                const sScore = section === 0 ? f9Score : b9Score;
+                const sPar   = section === 0 ? f9Par   : b9Par;
+                const sPutts = section === 0 ? f9Putts : b9Putts;
+                return (
+                  <div key={section} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: "1px solid " + T.border, background: T.bgDeep }}>
+                      <span style={{ fontSize: 11, color: T.textFaint, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700 }}>{section === 0 ? "Front 9" : "Back 9"}</span>
+                      <div style={{ display: "flex", gap: 16 }}>
+                        {sPutts > 0 && <span style={{ fontSize: 12, color: "#60a5fa" }}>{sPutts} puttar</span>}
+                        <span style={{ fontSize: 15, color: sScore ? (sScore-sPar < 0 ? "#4ade80" : sScore-sPar > 0 ? "#f87171" : "#94a3b8") : T.textFaint, fontWeight: 700 }}>
+                          {sScore || "-"} <span style={{ fontSize: 11, color: T.textFaint, fontWeight: 400 }}>/ {sPar}</span>
+                        </span>
+                      </div>
+                    </div>
+                    {HOLES.slice(section * 9, section * 9 + 9).map(hole => (
+                      <HoleRow key={hole.hole} holeData={hole}
+                        score={scores[hole.hole] || 0} putts={putts[hole.hole] || 0}
+                        onScore={val => handleScore(hole.hole, val)}
+                        onPutts={val => handlePutts(hole.hole, val)}
+                        onReady={() => handleReady(hole.hole)}
+                        active={activeHole === hole.hole}
+                        onClick={() => setActiveHole(activeHole === hole.hole ? null : hole.hole)}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {view === "stats" && (
+            <div style={{ padding: "24px 32px" }}>
+              <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px", marginBottom: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontSize: 12, color: T.textFaint, letterSpacing: 1, textTransform: "uppercase", flexShrink: 0, minWidth: 48 }}>Bana</span>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <button onClick={() => setStatsCourse("all")} style={{ padding: "5px 14px", borderRadius: 20, border: "1px solid " + (statsCourse === "all" ? T.accent : T.border), background: statsCourse === "all" ? T.bgActive : "transparent", color: statsCourse === "all" ? T.accent : T.textDim, fontSize: 12, fontWeight: statsCourse === "all" ? 700 : 400, cursor: "pointer" }}>
+                      Alla banor ({rounds.length})
+                    </button>
+                    {COURSE_LIST.map(course => {
+                      const count = rounds.filter(r => (r.courseId || "surahammar") === course.id).length;
+                      if (count === 0) return null;
+                      return (
+                        <button key={course.id} onClick={() => setStatsCourse(course.id)} style={{ padding: "5px 14px", borderRadius: 20, border: "1px solid " + (statsCourse === course.id ? T.accent : T.border), background: statsCourse === course.id ? T.bgActive : "transparent", color: statsCourse === course.id ? T.accent : T.textDim, fontSize: 12, fontWeight: statsCourse === course.id ? 700 : 400, cursor: "pointer" }}>
+                          {course.name} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 12, color: T.textFaint, letterSpacing: 1, textTransform: "uppercase", flexShrink: 0, minWidth: 48 }}>År</span>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <button onClick={() => setStatsYear("all")} style={{ padding: "5px 14px", borderRadius: 20, border: "1px solid " + (statsYear === "all" ? T.accent : T.border), background: statsYear === "all" ? T.bgActive : "transparent", color: statsYear === "all" ? T.accent : T.textDim, fontSize: 12, fontWeight: statsYear === "all" ? 700 : 400, cursor: "pointer" }}>
+                      Alla år
+                    </button>
+                    {availableYears.map(year => {
+                      const count = rounds.filter(r => new Date(r.date).getFullYear() === year).length;
+                      return (
+                        <button key={year} onClick={() => setStatsYear(String(year))} style={{ padding: "5px 14px", borderRadius: 20, border: "1px solid " + (statsYear === String(year) ? T.accent : T.border), background: statsYear === String(year) ? T.bgActive : "transparent", color: statsYear === String(year) ? T.accent : T.textDim, fontSize: 12, fontWeight: statsYear === String(year) ? 700 : 400, cursor: "pointer" }}>
+                          {year} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {filteredRounds.length !== rounds.length && (
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid " + T.border, fontSize: 12, color: T.textFaint }}>
+                    Visar {filteredRounds.length} av {rounds.length} ronder
+                  </div>
+                )}
+              </div>
+
+              {filteredRounds.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "80px 0", color: T.textFaint, fontSize: 15 }}>
+                  Inga ronder sparade för {statsYear === "all" ? "något år" : statsYear}
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                    <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 24 }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: T.textPrimary }}>Resultatfördelning</div>
+                      <ResultDonut dist={dist} />
+                    </div>
+                    <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 24 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>Puttstatistik</div>
+                        <button onClick={() => setPutt10(v => !v)} style={{ padding: "4px 12px", borderRadius: 20, border: "1px solid " + (putt10 ? T.accent : T.border), background: putt10 ? T.bgActive : "transparent", color: putt10 ? T.accent : T.textDim, fontSize: 11, fontWeight: putt10 ? 700 : 400, cursor: "pointer" }}>
+                          10 senaste
+                        </button>
+                      </div>
+                      {(() => {
+                        const pr = putt10 ? last10Rounds : filteredRounds;
+                        const pv = pr.flatMap(r => Object.values(r.putts || {})).filter(p => p > 0);
+                        const hwp = pv.length;
+                        const atp = pv.reduce((s,p)=>s+p,0);
+                        const ap  = hwp > 0 ? (atp/hwp).toFixed(1) : "-";
+                        const apr = pr.length > 0 ? (pr.reduce((s,r)=>s+Object.values(r.putts||{}).reduce((a,p)=>a+p,0),0)/pr.length).toFixed(1) : "-";
+                        const p1 = pv.filter(p=>p===1).length;
+                        const p2 = pv.filter(p=>p===2).length;
+                        const p3 = pv.filter(p=>p>=3).length;
+                        return (
+                          <div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+                              {[["Snitt/rond", apr, "#60a5fa"],["Snitt/hål", ap, "#818cf8"],["Reg. hål", hwp, "#94a3b8"]].map(item => (
+                                <div key={item[0]} style={{ background: T.bgBlueMid, border: "1px solid " + T.border, borderRadius: 10, padding: "12px 8px", textAlign: "center" }}>
+                                  <div style={{ fontSize: 22, fontWeight: 900, color: item[2] }}>{item[1]}</div>
+                                  <div style={{ fontSize: 11, color: T.textDim, marginTop: 4 }}>{item[0]}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <StatBar label="1 putt"    count={p1} color="#4ade80" pct={hwp > 0 ? (p1/hwp)*100 : 0} />
+                            <StatBar label="2 puttar"  count={p2} color="#60a5fa" pct={hwp > 0 ? (p2/hwp)*100 : 0} />
+                            <StatBar label="3+ puttar" count={p3} color="#f87171" pct={hwp > 0 ? (p3/hwp)*100 : 0} />
+                            {putt10 && <div style={{ fontSize: 11, color: T.textFaint, marginTop: 10, textAlign: "right" }}>Baserat på {pr.length} ronder</div>}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 24, marginBottom: 16 }}>
+                    {(() => {
+                      const gr = gir10 ? last10Rounds : filteredRounds;
+                      let gh = 0, gt = 0;
+                      gr.forEach(r => HOLES.forEach(h => {
+                        const s = r.scores[h.hole], p = (r.putts||{})[h.hole];
+                        if (s && p) { gt++; if (s - p <= h.par - 2) gh++; }
+                      }));
+                      const gp = gt > 0 ? Math.round(gh / gt * 100) : null;
+                      return (
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                            <div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>Greens in Regulation (GIR)</div>
+                              <div style={{ fontSize: 12, color: T.textFaint, marginTop: 4 }}>Andel hål där du nått green på rätt antal slag</div>
+                              <button onClick={() => setGir10(v => !v)} style={{ marginTop: 10, padding: "4px 14px", borderRadius: 20, border: "1px solid " + (gir10 ? T.accent : T.border), background: gir10 ? T.bgActive : "transparent", color: gir10 ? T.accent : T.textDim, fontSize: 11, fontWeight: gir10 ? 700 : 400, cursor: "pointer" }}>
+                                {gir10 ? "10 senaste ✓" : "10 senaste"}
+                              </button>
+                            </div>
+                            <div style={{ textAlign: "center", flexShrink: 0 }}>
+                              <div style={{ fontSize: 42, fontWeight: 900, lineHeight: 1, color: gp !== null ? (gp >= 50 ? "#4ade80" : gp >= 30 ? "#fb923c" : "#f87171") : T.textGhost }}>
+                                {gp !== null ? gp + "%" : "-"}
+                              </div>
+                              <div style={{ fontSize: 11, color: T.textFaint, marginTop: 4 }}>{gh} av {gt} hål</div>
+                              {gir10 && <div style={{ fontSize: 10, color: T.accent, marginTop: 2 }}>{gr.length} ronder</div>}
+                            </div>
+                          </div>
+                          {gt > 0 && (
+                            <div>
+                              <div style={{ height: 10, background: T.border, borderRadius: 6, overflow: "hidden" }}>
+                                <div style={{ height: "100%", width: (gp||0) + "%", background: (gp||0) >= 50 ? "linear-gradient(90deg,#16a34a,#4ade80)" : (gp||0) >= 30 ? "linear-gradient(90deg,#ea580c,#fb923c)" : "linear-gradient(90deg,#dc2626,#f87171)", borderRadius: 6, transition: "width 0.5s ease" }} />
+                              </div>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+                                <span style={{ fontSize: 11, color: T.textFaint }}>0%</span>
+                                <span style={{ fontSize: 11, color: "#4ade80" }}>Tour-snitt ~65%</span>
+                                <span style={{ fontSize: 11, color: T.textFaint }}>100%</span>
+                              </div>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
+                                {[3, 4, 5].map(par => {
+                                  let h = 0, t = 0;
+                                  gr.forEach(r => HOLES.filter(x => x.par === par).forEach(hole => {
+                                    const s = r.scores[hole.hole], p = (r.putts||{})[hole.hole];
+                                    if (s && p) { t++; if (s - p <= par - 2) h++; }
+                                  }));
+                                  const pct = t > 0 ? Math.round(h/t*100) + "%" : "-";
+                                  const color = par===3?"#94a3b8":par===4?"#60a5fa":"#a78bfa";
+                                  return (
+                                    <div key={par} style={{ background: T.bgSidebarBtn, border: "1px solid " + T.border, borderRadius: 10, padding: "12px 8px", textAlign: "center" }}>
+                                      <div style={{ fontSize: 20, fontWeight: 900, color }}>{pct}</div>
+                                      <div style={{ fontSize: 11, color: T.textFaint, marginTop: 4 }}>Par {par}</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {gt === 0 && (
+                            <div style={{ textAlign: "center", padding: "16px 0", color: T.textFaint, fontSize: 13 }}>GIR kräver att både slag och puttar är registrerade per hål</div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                    <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 24 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>Score-historik</div>
+                        <button onClick={() => setHist10(v => !v)} style={{ padding: "4px 12px", borderRadius: 20, border: "1px solid " + (hist10 ? T.accent : T.border), background: hist10 ? T.bgActive : "transparent", color: hist10 ? T.accent : T.textDim, fontSize: 11, fontWeight: hist10 ? 700 : 400, cursor: "pointer" }}>10 senaste</button>
+                      </div>
+                      {(() => {
+                        const hr = hist10 ? last10Rounds : filteredRounds;
+                        return (
+                          <div>
+                            <div style={{ fontSize: 12, color: T.textFaint, marginBottom: 16 }}>{hr.length} ronder</div>
+                            <HistoryChart rounds={hr} />
+                            {hr.length > 0 && (
+                              <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+                                {[["Bästa", Math.min(...hr.map(r=>r.totalScore)), "#4ade80"],["Snitt", (hr.reduce((s,r)=>s+r.totalScore,0)/hr.length).toFixed(1), "#94a3b8"],["Senaste", hr[hr.length-1].totalScore, "#60a5fa"]].map(item => (
+                                  <div key={item[0]} style={{ flex: 1, textAlign: "center", background: T.bgSidebarBtn, border: "1px solid " + T.border, borderRadius: 10, padding: "10px 8px" }}>
+                                    <div style={{ fontSize: 20, fontWeight: 900, color: item[2] }}>{item[1]}</div>
+                                    <div style={{ fontSize: 11, color: T.textDim }}>{item[0]}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 24 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>Front / Back</div>
+                        <div style={{ fontSize: 11, color: T.textFaint }}>Snitt per rond · {filteredRounds.length} ronder</div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 80px", gap: 4, marginBottom: 8 }}>
+                        {["","Slag","Par","Puttar"].map((h, i) => (
+                          <div key={i} style={{ fontSize: 11, color: T.textFaint, textAlign: i === 0 ? "left" : "center", letterSpacing: 1, textTransform: "uppercase" }}>{h}</div>
+                        ))}
+                      </div>
+                      {[["Front 9", allF9Score || "-", allF9Par, allF9Putts || "-"],["Back 9", allB9Score || "-", allB9Par, allB9Putts || "-"],["Totalt", allTotalScore || "-", allTotalPar, allRoundsPutts || "-"]].map((row, i) => (
+                        <div key={row[0]} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 80px", gap: 4, padding: "12px 0", borderTop: "1px solid " + (i === 2 ? T.borderStrong : T.border) }}>
+                          <span style={{ color: i === 2 ? T.textPrimary : T.textMuted, fontSize: 15, fontWeight: i === 2 ? 700 : 400 }}>{row[0]}</span>
+                          <span style={{ textAlign: "center", fontSize: i === 2 ? 22 : 18, fontWeight: 700, color: typeof row[1] === "number" ? (row[1]-row[2] < 0 ? "#4ade80" : row[1]-row[2] > 0 ? "#f87171" : "#94a3b8") : T.textGhost }}>{row[1]}</span>
+                          <span style={{ textAlign: "center", fontSize: 14, color: T.textDim }}>{row[2]}</span>
+                          <span style={{ textAlign: "center", fontSize: 16, color: typeof row[3] === "number" && row[3] > 0 ? "#60a5fa" : T.textGhost }}>{row[3]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 24 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>Snitt per hål</div>
+                      <button onClick={() => setAvg10(v => !v)} style={{ padding: "4px 12px", borderRadius: 20, border: "1px solid " + (avg10 ? T.accent : T.border), background: avg10 ? T.bgActive : "transparent", color: avg10 ? T.accent : T.textDim, fontSize: 11, fontWeight: avg10 ? 700 : 400, cursor: "pointer" }}>10 senaste</button>
+                    </div>
+                    <div style={{ fontSize: 12, color: T.textFaint, marginBottom: 16 }}>
+                      {avg10 ? "Baserat på " + last10Rounds.length + " senaste ronder" : "Beräknat över alla sparade ronder"}
+                    </div>
+                    <HoleAvgTable rounds={avg10 ? last10Rounds : filteredRounds} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+
+          {view === "history" && (
+            <div style={{ padding: "24px 32px" }}>
+              {editingRound !== null ? (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+                    <button onClick={() => setEditingRound(null)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid " + T.border, borderRadius: 8, color: T.textDim, fontSize: 13, cursor: "pointer" }}>← Tillbaka</button>
+                    <div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: T.textPrimary }}>Redigerar: {editRound?.dateLabel}{editRound?.playerName ? " — " + editRound.playerName : ""}</div>
+                      <div style={{ fontSize: 12, color: T.textFaint }}>Klicka på ett hål för att ändra slag och puttar</div>
+                    </div>
+                    <button onClick={saveEditRound} style={{ marginLeft: "auto", padding: "10px 28px", background: "linear-gradient(135deg,#16a34a,#4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Spara ändringar</button>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+                    {[["Total score", editTotal || "-", (editDiff > 0 ? "+" : "") + (editDiff !== 0 ? editDiff : "E") + " mot par", editDiff < 0 ? "#4ade80" : editDiff > 0 ? "#f87171" : "#94a3b8"],["Puttar", editPutTotal || "-", "", "#60a5fa"],["Datum", editRound?.dateLabel, "", T.textMuted],["Spelare", editRound?.playerName || "-", "", T.textMuted]].map(kpi => (
+                      <div key={kpi[0]} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 18px" }}>
+                        <div style={{ fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{kpi[0]}</div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: kpi[3] }}>{kpi[1]}</div>
+                        {kpi[2] && <div style={{ fontSize: 12, color: T.textFaint }}>{kpi[2]}</div>}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    {[0, 1].map(section => (
+                      <div key={section} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, overflow: "hidden" }}>
+                        <div style={{ padding: "10px 16px", background: T.bgDeep, borderBottom: "1px solid " + T.border }}>
+                          <span style={{ fontSize: 11, color: T.textFaint, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700 }}>{section === 0 ? "Front 9" : "Back 9"}</span>
+                        </div>
+                        {HOLES.slice(section * 9, section * 9 + 9).map(hole => (
+                          <EditHoleRow key={hole.hole} holeData={hole}
+                            score={editScores[hole.hole] || 0}
+                            putts={editPutts[hole.hole] || 0}
+                            onScore={val => setEditScores(prev => ({ ...prev, [hole.hole]: val }))}
+                            onPutts={val => setEditPutts(prev => ({ ...prev, [hole.hole]: val }))}
+                            open={editOpenHole === hole.hole}
+                            onToggle={() => setEditOpenHole(editOpenHole === hole.hole ? null : hole.hole)}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                    <div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary }}>Sparade ronder</div>
+                      <div style={{ fontSize: 13, color: T.textFaint, marginTop: 2 }}>{rounds.length} ronder totalt</div>
+                    </div>
+                    <button onClick={() => setShowImport(true)} style={{ padding: "10px 22px", background: "transparent", border: "1px solid " + T.borderActive, borderRadius: 10, color: T.accent, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                      ↑ Importera från Min Golf
+                    </button>
+                  </div>
+                  {rounds.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "80px 0" }}>
+                      <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+                      <div style={{ color: T.textFaint, fontSize: 15 }}>Inga sparade ronder ännu</div>
+                      <div style={{ color: T.textGhost, fontSize: 13, marginTop: 8 }}>Spela en rond eller importera från Min Golf</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {[...rounds].reverse().map(round => {
+                        const diff = round.totalScore - 72;
+                        const diffColor = diff < 0 ? "#4ade80" : diff > 0 ? "#f87171" : "#94a3b8";
+                        const diffLabel = diff > 0 ? "+" + diff : diff < 0 ? String(diff) : "E";
+                        return (
+                          <div key={round.id} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16 }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>{round.playerName || "Okänd spelare"}</div>
+                              {round.courseName && <div style={{ fontSize: 11, color: T.accent, fontWeight: 600, marginTop: 2 }}>{round.courseName}</div>}
+                              <div style={{ fontSize: 12, color: T.textDim, marginTop: 2 }}>{new Date(round.date).toLocaleDateString("sv-SE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
+                            </div>
+                            <div style={{ textAlign: "center", width: 64 }}>
+                              <div style={{ fontSize: 28, fontWeight: 900, color: diffColor }}>{diffLabel}</div>
+                              <div style={{ fontSize: 10, color: T.textDim }}>mot par</div>
+                            </div>
+                            <div style={{ textAlign: "center", width: 64 }}>
+                              <div style={{ fontSize: 28, fontWeight: 900, color: T.textPrimary }}>{round.totalScore}</div>
+                              <div style={{ fontSize: 10, color: T.textDim }}>slag</div>
+                            </div>
+                            {round.totalPutts > 0 && (
+                              <div style={{ textAlign: "center", width: 64 }}>
+                                <div style={{ fontSize: 28, fontWeight: 900, color: "#60a5fa" }}>{round.totalPutts}</div>
+                                <div style={{ fontSize: 10, color: T.textDim }}>puttar</div>
+                              </div>
+                            )}
+                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                              <button onClick={() => startEditRound(round)} style={{ padding: "8px 18px", background: "transparent", border: "1px solid " + T.borderActive, borderRadius: 8, color: T.accent, fontSize: 13, cursor: "pointer" }}>Redigera</button>
+                              <DeleteRoundButton onDelete={() => saveRounds(rounds.filter(r => r.id !== round.id))} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      </div>
+      <div style={{ textAlign: "center", padding: "8px 0", fontSize: 10, color: T.textGhost, letterSpacing: 1, userSelect: "none" }}>
+        Slagbok · Skapad av Oscar Widmark
+      </div>
+    </div>
+  );
+}
