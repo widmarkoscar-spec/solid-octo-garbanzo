@@ -405,7 +405,134 @@ function HoleAvgTable({ rounds }) {
   );
 }
 
-function ImportModal({ onClose, onImport, courseId, setCourseId }) {
+function AddCourseModal({ onClose, onSave }) {
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [nameError, setNameError] = useState("");
+  const defaultHoles = Array.from({ length: 18 }, (_, i) => ({
+    hole: i + 1,
+    par: 4,
+    hcp: i + 1,
+    name: "Hål " + (i + 1),
+  }));
+  const [holes, setHoles] = useState(defaultHoles);
+  const [hcpError, setHcpError] = useState("");
+
+  function goToStep2() {
+    if (!name.trim()) { setNameError("Banans namn är obligatoriskt."); return; }
+    setNameError("");
+    setStep(2);
+  }
+
+  function setPar(holeIndex, par) {
+    setHoles(prev => prev.map((h, i) => i === holeIndex ? { ...h, par } : h));
+  }
+
+  function setHcp(holeIndex, val) {
+    const num = parseInt(val);
+    setHoles(prev => prev.map((h, i) => i === holeIndex ? { ...h, hcp: isNaN(num) ? "" : num } : h));
+  }
+
+  function handleSave() {
+    const hcpVals = holes.map(h => h.hcp);
+    const valid = hcpVals.every(v => typeof v === "number" && v >= 1 && v <= 18);
+    const unique = new Set(hcpVals).size === 18;
+    if (!valid || !unique) {
+      setHcpError("HCP-värdena måste vara unika heltal mellan 1 och 18.");
+      return;
+    }
+    setHcpError("");
+    const id = "custom_" + Date.now();
+    const course = {
+      id,
+      name: name.trim(),
+      subtitle: subtitle.trim(),
+      holes: holes.map(h => ({ ...h, hcp: h.hcp })),
+    };
+    onSave(course);
+    onClose();
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#000000bb", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 16, padding: 32, width: 620, maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: T.textPrimary }}>Lägg till egen bana</div>
+            <div style={{ fontSize: 13, color: T.textDim, marginTop: 4 }}>Steg {step} av 2</div>
+          </div>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: 20, cursor: "pointer" }}>×</button>
+        </div>
+
+        {step === 1 && (
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Banans namn *</label>
+              <input
+                placeholder="T.ex. Örebro GK"
+                value={name}
+                onChange={e => { setName(e.target.value); setNameError(""); }}
+                style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + (nameError ? "#ef4444" : T.border), borderRadius: 8, color: T.textSecondary, fontSize: 14 }}
+              />
+              {nameError && <div style={{ color: "#f87171", fontSize: 12, marginTop: 6 }}>{nameError}</div>}
+            </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Undertitel (valfri)</label>
+              <input
+                placeholder='T.ex. "Parkbana"'
+                value={subtitle}
+                onChange={e => setSubtitle(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }}
+              />
+            </div>
+            <button onClick={goToStep2} style={{ width: "100%", padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+              Nästa →
+            </button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <div style={{ display: "grid", gridTemplateColumns: "40px 1fr auto 80px", gap: 8, padding: "0 4px", marginBottom: 8 }}>
+              {["Hål", "Par", "", "HCP"].map((h, i) => (
+                <div key={i} style={{ fontSize: 10, color: T.textFaint, letterSpacing: 1, textTransform: "uppercase", textAlign: i === 3 ? "center" : "left" }}>{h}</div>
+              ))}
+            </div>
+            <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
+              {holes.map((hole, i) => (
+                <div key={hole.hole} style={{ display: "grid", gridTemplateColumns: "40px 1fr auto 80px", gap: 8, alignItems: "center", padding: "8px 12px", borderBottom: i < 17 ? "1px solid " + T.border : "none", background: i % 2 === 0 ? "transparent" : T.bgDeep }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: T.bgCircle, border: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: T.textDim, fontWeight: 700 }}>{hole.hole}</div>
+                  <div style={{ fontSize: 12, color: T.textSecondary }}>{hole.name}</div>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {[3, 4, 5].map(p => (
+                      <button key={p} onClick={() => setPar(i, p)} style={{ width: 32, height: 28, borderRadius: 6, border: "1px solid " + (hole.par === p ? T.accent : T.border), background: hole.par === p ? T.bgActive : T.bgInput, color: hole.par === p ? T.accent : T.textDim, fontSize: 12, fontWeight: hole.par === p ? 700 : 400, cursor: "pointer" }}>{p}</button>
+                    ))}
+                  </div>
+                  <input
+                    type="number"
+                    min={1}
+                    max={18}
+                    value={hole.hcp}
+                    onChange={e => setHcp(i, e.target.value)}
+                    style={{ width: "100%", padding: "5px 8px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 6, color: T.textSecondary, fontSize: 13, textAlign: "center" }}
+                  />
+                </div>
+              ))}
+            </div>
+            {hcpError && <div style={{ color: "#f87171", fontSize: 13, marginBottom: 12, padding: "8px 12px", background: "#1c0505", borderRadius: 8, border: "1px solid #ef444433" }}>{hcpError}</div>}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setStep(1)} style={{ flex: 1, padding: 12, background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.textDim, fontSize: 14, cursor: "pointer" }}>← Tillbaka</button>
+              <button onClick={handleSave} style={{ flex: 2, padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Spara bana</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, coursesMap }) {
   const [text, setText] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [name, setName] = useState("");
@@ -427,7 +554,7 @@ function ImportModal({ onClose, onImport, courseId, setCourseId }) {
     const d = new Date(date);
     const dateLabel = d.getDate() + "/" + (d.getMonth() + 1);
     const totalScore = HOLES.reduce((s, h) => s + (preview[h.hole] || 0), 0);
-    const importCourse = COURSES[courseId] || COURSES.surahammar;
+    const importCourse = (coursesMap || COURSES)[courseId] || COURSES.surahammar;
     onImport({ id: Date.now(), date: new Date(date).toISOString(), dateLabel, playerName: name, courseId, courseName: importCourse.name, totalScore, totalPutts: 0, scores: { ...preview }, putts: {} });
     onClose();
   }
@@ -455,7 +582,7 @@ function ImportModal({ onClose, onImport, courseId, setCourseId }) {
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Bana</label>
           <div style={{ display: "flex", gap: 6 }}>
-            {COURSE_LIST.map(course => (
+            {(courseList || COURSE_LIST).map(course => (
               <button key={course.id} onClick={() => setCourseId(course.id)} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, border: "2px solid " + (courseId === course.id ? T.accent : T.border), background: courseId === course.id ? T.bgActive : T.bgInput, color: courseId === course.id ? T.accent : T.textSecondary, fontSize: 11, fontWeight: courseId === course.id ? 700 : 400, cursor: "pointer", textAlign: "center" }}>
                 {course.name}
               </button>
@@ -542,9 +669,13 @@ export default function GolfApp() {
   const [avg10, setAvg10]             = useState(false);
   const [courseId, setCourseId]     = useState("surahammar");
   const [updateMsg, setUpdateMsg] = useState(null);
+  const [customCourses, setCustomCourses] = useState([]);
+  const [showAddCourse, setShowAddCourse] = useState(false);
 
   T = darkMode ? DARK : LIGHT;
-  const COURSE = COURSES[courseId] || COURSES.surahammar;
+  const allCoursesMap = { ...COURSES, ...Object.fromEntries(customCourses.map(c => [c.id, c])) };
+  const allCourseList = [...COURSE_LIST, ...customCourses];
+  const COURSE = allCoursesMap[courseId] || COURSES.surahammar;
   HOLES = COURSE.holes; // update global
 
   useEffect(() => {
@@ -558,6 +689,8 @@ export default function GolfApp() {
           if (theme !== undefined) setDarkMode(theme !== "light");
           const course = await s.get("course");
           if (course)  setCourseId(course);
+          const customC = await s.get("customCourses");
+          if (customC) setCustomCourses(customC);
         }
       } catch {}
       setStorageReady(true);
@@ -742,6 +875,20 @@ export default function GolfApp() {
           onImport={(round) => { const updated = [...rounds, round]; saveRounds(updated); setSaveStatus("saved"); setTimeout(() => setSaveStatus(""), 2500); }}
           courseId={courseId}
           setCourseId={setCourseId}
+          courseList={allCourseList}
+          coursesMap={allCoursesMap}
+        />
+      )}
+
+      {showAddCourse && (
+        <AddCourseModal
+          onClose={() => setShowAddCourse(false)}
+          onSave={(course) => {
+            const updated = [...customCourses, course];
+            setCustomCourses(updated);
+            setCourseId(course.id);
+            window.electronAPI?.store.set("customCourses", updated);
+          }}
         />
       )}
 
@@ -767,14 +914,26 @@ export default function GolfApp() {
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: "block", fontSize: 11, color: T.textDim, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Aktiv bana</label>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {COURSE_LIST.map(course => (
+                {allCourseList.map(course => (
                   <button key={course.id} onClick={() => setCourseId(course.id)} style={{ padding: "10px 14px", borderRadius: 8, border: "2px solid " + (courseId === course.id ? T.accent : T.border), background: courseId === course.id ? T.bgActive : T.bgInput, color: courseId === course.id ? T.accent : T.textSecondary, fontSize: 13, fontWeight: courseId === course.id ? 700 : 400, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>{course.name}</span>
-                    <span style={{ fontSize: 11, color: courseId === course.id ? T.accent : T.textFaint }}>{course.subtitle}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 11, color: courseId === course.id ? T.accent : T.textFaint }}>{course.subtitle}</span>
+                      {course.id.startsWith("custom_") && (
+                        <button
+                          onClick={e => { e.stopPropagation(); const updated = customCourses.filter(c => c.id !== course.id); setCustomCourses(updated); window.electronAPI?.store.set("customCourses", updated); if (courseId === course.id) setCourseId("surahammar"); }}
+                          style={{ background: "transparent", border: "none", color: T.textFaint, fontSize: 14, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
+                          title="Ta bort bana"
+                        >×</button>
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
+            <button onClick={() => { setShowSettings(false); setShowAddCourse(true); }} style={{ width: "100%", padding: "10px 14px", background: "transparent", border: "1px dashed " + T.border, borderRadius: 8, color: T.textDim, fontSize: 13, cursor: "pointer", marginBottom: 8 }}>
+              + Lägg till egen bana
+            </button>
             <button onClick={() => setShowSettings(false)} style={{ width: "100%", padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Spara och stäng
             </button>
@@ -918,7 +1077,7 @@ export default function GolfApp() {
                     <button onClick={() => setStatsCourse("all")} style={{ padding: "5px 14px", borderRadius: 20, border: "1px solid " + (statsCourse === "all" ? T.accent : T.border), background: statsCourse === "all" ? T.bgActive : "transparent", color: statsCourse === "all" ? T.accent : T.textDim, fontSize: 12, fontWeight: statsCourse === "all" ? 700 : 400, cursor: "pointer" }}>
                       Alla banor ({rounds.length})
                     </button>
-                    {COURSE_LIST.map(course => {
+                    {allCourseList.map(course => {
                       const count = rounds.filter(r => (r.courseId || "surahammar") === course.id).length;
                       if (count === 0) return null;
                       return (
