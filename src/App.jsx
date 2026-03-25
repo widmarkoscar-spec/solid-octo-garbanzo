@@ -629,6 +629,88 @@ function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, cou
   );
 }
 
+function RecordsView({ records, T, darkMode }) {
+  if (records === null) {
+    return (
+      <div style={{ textAlign: "center", padding: "80px 0" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🏆</div>
+        <div style={{ color: T.textFaint, fontSize: 15 }}>Spela din första rond för att se dina rekord!</div>
+      </div>
+    );
+  }
+
+  const items = [
+    {
+      icon: "🏌️",
+      title: "Bästa ronden",
+      value: records.bestRound !== null ? records.bestRound.totalScore : null,
+      sub: records.bestRound ? records.bestRound.dateLabel + (records.bestRound.courseName ? " · " + records.bestRound.courseName : "") : null,
+      unit: "slag",
+    },
+    {
+      icon: "🐦",
+      title: "Flest birdies på en runda",
+      value: records.mostBirdies !== null ? records.mostBirdies.count : null,
+      sub: records.mostBirdies ? records.mostBirdies.dateLabel + (records.mostBirdies.courseName ? " · " + records.mostBirdies.courseName : "") : null,
+      unit: "birdies",
+    },
+    {
+      icon: "⛳",
+      title: "Bästa enskilda hål",
+      value: records.bestHole !== null ? records.bestHole.label : null,
+      sub: records.bestHole ? "Hål " + records.bestHole.hole + " · " + records.bestHole.dateLabel + (records.bestHole.courseName ? " · " + records.bestHole.courseName : "") : null,
+      unit: null,
+    },
+    {
+      icon: "🎯",
+      title: "Bästa Front 9",
+      value: records.bestFront9 !== null ? records.bestFront9.score : null,
+      sub: records.bestFront9 ? records.bestFront9.dateLabel + (records.bestFront9.courseName ? " · " + records.bestFront9.courseName : "") : null,
+      unit: "slag",
+    },
+    {
+      icon: "🎯",
+      title: "Bästa Back 9",
+      value: records.bestBack9 !== null ? records.bestBack9.score : null,
+      sub: records.bestBack9 ? records.bestBack9.dateLabel + (records.bestBack9.courseName ? " · " + records.bestBack9.courseName : "") : null,
+      unit: "slag",
+    },
+    {
+      icon: "🔥",
+      title: "Flest par eller bättre på en runda",
+      value: records.mostParOrBetter !== null ? records.mostParOrBetter.count : null,
+      sub: records.mostParOrBetter ? records.mostParOrBetter.dateLabel + (records.mostParOrBetter.courseName ? " · " + records.mostParOrBetter.courseName : "") : null,
+      unit: "hål",
+    },
+  ];
+
+  return (
+    <div style={{ padding: "24px 32px" }}>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary }}>Personliga rekord</div>
+        <div style={{ fontSize: 13, color: T.textFaint, marginTop: 2 }}>Baserat på alla sparade ronder</div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: "20px 24px" }}>
+            <div style={{ fontSize: 12, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16 }}>{item.icon}</span>
+              <span>{item.title}</span>
+            </div>
+            <div style={{ fontSize: 36, fontWeight: 900, color: item.value !== null ? T.accent : T.textGhost, lineHeight: 1, marginBottom: 6 }}>
+              {item.value !== null ? item.value : "—"}
+              {item.value !== null && item.unit && <span style={{ fontSize: 14, fontWeight: 400, color: T.textDim, marginLeft: 6 }}>{item.unit}</span>}
+            </div>
+            {item.sub && item.value !== null && (
+              <div style={{ fontSize: 12, color: T.textFaint, marginTop: 4 }}>{item.sub}</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DeleteRoundButton({ onDelete }) {
   const [confirming, setConfirming] = useState(false);
   if (confirming) {
@@ -796,6 +878,86 @@ export default function GolfApp() {
   // Par per round can vary by course — sum actual pars
   const allTotalPar = HOLES.reduce((s, h) => s + h.par, 0);
   const allRoundsPutts = filteredRounds.length > 0 ? +(filteredRounds.reduce((s, r) => s + (r.totalPutts || 0), 0) / n).toFixed(1) : 0;
+
+  // --- Records calculations ---
+  let records = null;
+  if (rounds.length > 0) {
+    // 1. Best round (lowest totalScore)
+    let bestRound = null;
+    rounds.forEach(r => {
+      if (bestRound === null || r.totalScore < bestRound.totalScore) bestRound = r;
+    });
+
+    // 2. Most birdies in a single round
+    let mostBirdies = null;
+    rounds.forEach(r => {
+      let count = 0;
+      HOLES.forEach(h => {
+        const s = r.scores[h.hole];
+        if (s && s <= h.par - 1) count++;
+      });
+      if (mostBirdies === null || count > mostBirdies.count) {
+        mostBirdies = { count, dateLabel: r.dateLabel, courseName: r.courseName };
+      }
+    });
+
+    // 3. Best single hole relative to par
+    let bestHole = null;
+    const holeResultOrder = ["HIO", "Albatross", "Eagle", "Birdie", "Par", "Bogey", "Dubbel", "Trippel"];
+    rounds.forEach(r => {
+      HOLES.forEach(h => {
+        const s = r.scores[h.hole];
+        if (!s) return;
+        const res = getResult(s, h.par);
+        if (!res) return;
+        if (bestHole === null) {
+          bestHole = { hole: h.hole, label: res.label, color: res.color, diff: s - h.par, dateLabel: r.dateLabel, courseName: r.courseName };
+        } else {
+          const newIdx = holeResultOrder.indexOf(res.label);
+          const curIdx = holeResultOrder.indexOf(bestHole.label);
+          const newDiff = s - h.par;
+          if (newIdx < curIdx || (newIdx === curIdx && newDiff < bestHole.diff)) {
+            bestHole = { hole: h.hole, label: res.label, color: res.color, diff: newDiff, dateLabel: r.dateLabel, courseName: r.courseName };
+          }
+        }
+      });
+    });
+
+    // 4. Best Front 9 (hål 1-9)
+    let bestFront9 = null;
+    rounds.forEach(r => {
+      const score = HOLES.slice(0, 9).reduce((s, h) => s + (r.scores[h.hole] || 0), 0);
+      if (score === 0) return;
+      if (bestFront9 === null || score < bestFront9.score) {
+        bestFront9 = { score, dateLabel: r.dateLabel, courseName: r.courseName };
+      }
+    });
+
+    // 5. Best Back 9 (hål 10-18)
+    let bestBack9 = null;
+    rounds.forEach(r => {
+      const score = HOLES.slice(9).reduce((s, h) => s + (r.scores[h.hole] || 0), 0);
+      if (score === 0) return;
+      if (bestBack9 === null || score < bestBack9.score) {
+        bestBack9 = { score, dateLabel: r.dateLabel, courseName: r.courseName };
+      }
+    });
+
+    // 6. Most par or better in a single round
+    let mostParOrBetter = null;
+    rounds.forEach(r => {
+      let count = 0;
+      HOLES.forEach(h => {
+        const s = r.scores[h.hole];
+        if (s && s <= h.par) count++;
+      });
+      if (mostParOrBetter === null || count > mostParOrBetter.count) {
+        mostParOrBetter = { count, dateLabel: r.dateLabel, courseName: r.courseName };
+      }
+    });
+
+    records = { bestRound, mostBirdies, bestHole, bestFront9, bestBack9, mostParOrBetter };
+  }
 
   const handleScore = (hole, val) => setScores(prev => ({ ...prev, [hole]: val }));
   const handlePutts = (hole, val) => setPutts(prev => ({ ...prev, [hole]: val }));
@@ -991,7 +1153,7 @@ export default function GolfApp() {
 
         <div style={{ width: 220, background: T.bgSecondary, borderRight: "1px solid " + T.topbarBorder, display: "flex", flexDirection: "column", flexShrink: 0 }}>
           <div style={{ padding: "16px 12px" }}>
-            {[["scorecard","Scorekort","📋"],["stats","Statistik","📊"],["history","Historik","🕒"]].map(tab => (
+            {[["scorecard","Scorekort","📋"],["stats","Statistik","📊"],["history","Historik","🕒"],["records","Rekord","🏆"]].map(tab => (
               <button key={tab[0]} onClick={() => { setView(tab[0]); setEditingRound(null); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 4, background: view === tab[0] ? T.bgActive : "transparent", border: "1px solid " + (view === tab[0] ? T.borderActive : "transparent"), borderRadius: 8, color: view === tab[0] ? T.accent : T.textDim, fontSize: 13, fontWeight: view === tab[0] ? 700 : 400, cursor: "pointer", textAlign: "left" }}>
                 <span>{tab[2]}</span><span>{tab[1]}</span>
               </button>
@@ -1383,6 +1545,10 @@ export default function GolfApp() {
                 </div>
               )}
             </div>
+          )}
+
+          {view === "records" && (
+            <RecordsView records={records} T={T} darkMode={darkMode} />
           )}
 
         </div>
