@@ -549,6 +549,7 @@ function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, cou
   const [text, setText] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [name, setName] = useState("");
+  const [totalPuttsInput, setTotalPuttsInput] = useState("");
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState("");
 
@@ -568,7 +569,9 @@ function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, cou
     const dateLabel = d.getDate() + "/" + (d.getMonth() + 1);
     const totalScore = HOLES.reduce((s, h) => s + (preview[h.hole] || 0), 0);
     const importCourse = (coursesMap || COURSES)[courseId] || COURSES.surahammar;
-    onImport({ id: Date.now(), date: new Date(date).toISOString(), dateLabel, playerName: name, courseId, courseName: importCourse.name, totalScore, totalPutts: 0, scores: { ...preview }, putts: {} });
+    const parsedPutts = parseInt(totalPuttsInput);
+    const totalPutts = !isNaN(parsedPutts) && parsedPutts > 0 ? parsedPutts : 0;
+    onImport({ id: Date.now(), date: new Date(date).toISOString(), dateLabel, playerName: name, courseId, courseName: importCourse.name, totalScore, totalPutts, scores: { ...preview }, putts: {} });
     onClose();
   }
 
@@ -582,7 +585,7 @@ function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, cou
           </div>
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: 20, cursor: "pointer" }}>×</button>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
           <div>
             <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Datum</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }} />
@@ -590,6 +593,10 @@ function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, cou
           <div>
             <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Spelarnamn</label>
             <input placeholder="Ditt namn" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Totalt puttar (valfritt)</label>
+            <input type="number" min="0" max="99" placeholder="t.ex. 32" value={totalPuttsInput} onChange={e => setTotalPuttsInput(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }} />
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
