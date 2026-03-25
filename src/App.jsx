@@ -96,6 +96,30 @@ const LEVELS = [
 
 const STORAGE_KEY = "sgk_rounds";
 
+const DEFAULT_CLUBS = [
+  { id: "driver",  cat: "Driver",  label: "Driver",   brand: "", model: "", dist: "", fav: false },
+  { id: "3wood",   cat: "Fairway", label: "3-wood",   brand: "", model: "", dist: "", fav: false },
+  { id: "5wood",   cat: "Fairway", label: "5-wood",   brand: "", model: "", dist: "", fav: false },
+  { id: "7wood",   cat: "Fairway", label: "7-wood",   brand: "", model: "", dist: "", fav: false },
+  { id: "hyb3",    cat: "Hybrid",  label: "3-hybrid", brand: "", model: "", dist: "", fav: false },
+  { id: "hyb4",    cat: "Hybrid",  label: "4-hybrid", brand: "", model: "", dist: "", fav: false },
+  { id: "hyb5",    cat: "Hybrid",  label: "5-hybrid", brand: "", model: "", dist: "", fav: false },
+  { id: "iron3",   cat: "Järn",    label: "3-järn",   brand: "", model: "", dist: "", fav: false },
+  { id: "iron4",   cat: "Järn",    label: "4-järn",   brand: "", model: "", dist: "", fav: false },
+  { id: "iron5",   cat: "Järn",    label: "5-järn",   brand: "", model: "", dist: "", fav: false },
+  { id: "iron6",   cat: "Järn",    label: "6-järn",   brand: "", model: "", dist: "", fav: false },
+  { id: "iron7",   cat: "Järn",    label: "7-järn",   brand: "", model: "", dist: "", fav: false },
+  { id: "iron8",   cat: "Järn",    label: "8-järn",   brand: "", model: "", dist: "", fav: false },
+  { id: "iron9",   cat: "Järn",    label: "9-järn",   brand: "", model: "", dist: "", fav: false },
+  { id: "pw",      cat: "Wedge",   label: "PW",       brand: "", model: "", dist: "", fav: false },
+  { id: "gw",      cat: "Wedge",   label: "GW",       brand: "", model: "", dist: "", fav: false },
+  { id: "sw",      cat: "Wedge",   label: "SW",       brand: "", model: "", dist: "", fav: false },
+  { id: "lw",      cat: "Wedge",   label: "LW",       brand: "", model: "", dist: "", fav: false },
+  { id: "putter",  cat: "Putter",  label: "Putter",   brand: "", model: "", dist: "", fav: false },
+];
+
+const AVATARS = ["🏌️","⛳","🦅","🔥","👑","🌿","🎯","💪","😎","🏆","🌱","🚶","🎒","☀️","🦁","🐯","🐺","🦊","🧠","⚡"];
+
 const DARK = {
   bgApp:"#030712", bgSecondary:"#0d1117", bgCard:"#0d1117", bgInput:"#161b22",
   bgActive:"#052e16", bgDeep:"#0a0f16", bgBlueMid:"#070d18",
@@ -548,7 +572,6 @@ function AddCourseModal({ onClose, onSave }) {
 function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, coursesMap }) {
   const [text, setText] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [name, setName] = useState("");
   const [totalPuttsInput, setTotalPuttsInput] = useState("");
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState("");
@@ -571,7 +594,7 @@ function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, cou
     const importCourse = (coursesMap || COURSES)[courseId] || COURSES.surahammar;
     const parsedPutts = parseInt(totalPuttsInput);
     const totalPutts = !isNaN(parsedPutts) && parsedPutts > 0 ? parsedPutts : 0;
-    onImport({ id: Date.now(), date: new Date(date).toISOString(), dateLabel, playerName: name, courseId, courseName: importCourse.name, totalScore, totalPutts, scores: { ...preview }, putts: {} });
+    onImport({ id: Date.now(), date: new Date(date).toISOString(), dateLabel, playerName: "", courseId, courseName: importCourse.name, totalScore, totalPutts, scores: { ...preview }, putts: {} });
     onClose();
   }
 
@@ -585,18 +608,14 @@ function ImportModal({ onClose, onImport, courseId, setCourseId, courseList, cou
           </div>
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: 20, cursor: "pointer" }}>×</button>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16, alignItems: "end" }}>
           <div>
             <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Datum</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }} />
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14, boxSizing: "border-box" }} />
           </div>
           <div>
-            <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Spelarnamn</label>
-            <input placeholder="Ditt namn" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }} />
-          </div>
-          <div>
-            <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Totalt puttar (valfritt)</label>
-            <input type="number" min="0" max="99" placeholder="t.ex. 32" value={totalPuttsInput} onChange={e => setTotalPuttsInput(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }} />
+            <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Puttar <span style={{ textTransform: "none", opacity: 0.6 }}>(valfritt)</span></label>
+            <input type="number" min="0" max="99" placeholder="t.ex. 32" value={totalPuttsInput} onChange={e => setTotalPuttsInput(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14, boxSizing: "border-box" }} />
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
@@ -860,6 +879,251 @@ function RecordsView({ records, T, darkMode }) {
   );
 }
 
+function BagView({ profile, onProfileChange, bag, onBagChange, goals, onGoalsChange, rounds, allCourseList }) {
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [editingClub, setEditingClub] = useState(null);
+
+  const clubs = bag.clubs || DEFAULT_CLUBS;
+  const ball  = bag.ball  || { brand: "", model: "" };
+
+  const updateClub = (id, field, value) => {
+    const updated = clubs.map(c => c.id === id ? { ...c, [field]: value } : c);
+    onBagChange({ ...bag, clubs: updated });
+  };
+  const toggleFav = (id) => {
+    const updated = clubs.map(c => ({ ...c, fav: c.id === id ? !c.fav : false }));
+    onBagChange({ ...bag, clubs: updated });
+  };
+
+  const CAT_ORDER  = ["Driver", "Fairway", "Hybrid", "Järn", "Wedge", "Putter"];
+  const catEmojis  = { Driver: "🏌️", Fairway: "🪵", Hybrid: "🔀", Järn: "⛏️", Wedge: "🔧", Putter: "🎯" };
+
+  // Stats from rounds
+  const parStats   = { 3: { total: 0, count: 0 }, 4: { total: 0, count: 0 }, 5: { total: 0, count: 0 } };
+  const holeAvgs   = {};
+  rounds.forEach(r => {
+    HOLES.forEach(h => {
+      const s = r.scores[h.hole]; if (!s) return;
+      if (parStats[h.par]) { parStats[h.par].total += s; parStats[h.par].count++; }
+      if (!holeAvgs[h.hole]) holeAvgs[h.hole] = { total: 0, count: 0, par: h.par };
+      holeAvgs[h.hole].total += s; holeAvgs[h.hole].count++;
+    });
+  });
+  const holeList   = Object.entries(holeAvgs).map(([hole, d]) => ({ hole: parseInt(hole), avg: d.total / d.count, par: d.par, diff: d.total / d.count - d.par }));
+  const bestHole   = holeList.length ? [...holeList].sort((a, b) => a.diff - b.diff)[0] : null;
+  const worstHole  = holeList.length ? [...holeList].sort((a, b) => b.diff - a.diff)[0] : null;
+
+  // Goals progress
+  const completedRounds = rounds.filter(r => r.totalScore > 0);
+  const bestScore       = completedRounds.length > 0 ? Math.min(...completedRounds.map(r => r.totalScore)) : null;
+  const scoreGoalNum    = parseInt(goals.scoreGoal);
+  const hcpGoalNum      = parseFloat(goals.hcpGoal);
+  const hcpNum          = parseFloat(profile.handicap);
+  const scoreGoalMet    = bestScore !== null && !isNaN(scoreGoalNum) && bestScore <= scoreGoalNum;
+  const hcpGoalMet      = !isNaN(hcpGoalNum) && !isNaN(hcpNum) && hcpNum <= hcpGoalNum;
+  const scoreBarPct     = scoreGoalMet ? 100 : (bestScore && !isNaN(scoreGoalNum)) ? Math.min(100, Math.max(5, Math.round((1 - (bestScore - scoreGoalNum) / 20) * 100))) : 5;
+  const hcpBarPct       = hcpGoalMet   ? 100 : (!isNaN(hcpGoalNum) && !isNaN(hcpNum)) ? Math.min(100, Math.max(5, Math.round((1 - (hcpNum - hcpGoalNum) / Math.max(1, hcpNum)) * 100))) : 5;
+
+  const inp = { background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textPrimary, fontSize: 13, padding: "8px 12px", outline: "none", width: "100%", boxSizing: "border-box" };
+  const sec = (emoji, title) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, marginTop: 32 }}>
+      <span style={{ fontSize: 18 }}>{emoji}</span>
+      <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>{title}</div>
+      <div style={{ flex: 1, height: 1, background: T.border }} />
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "24px 32px", maxWidth: 900 }}>
+
+      {/* ── Profil ── */}
+      <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* Top row: avatar + fields */}
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <div onClick={() => setShowAvatarPicker(v => !v)} style={{ width: 80, height: 80, borderRadius: "50%", background: T.bgActive, border: "2px solid " + (showAvatarPicker ? T.accent : T.border), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, cursor: "pointer", userSelect: "none", transition: "border-color 0.2s" }}>
+              {profile.avatar || "🏌️"}
+            </div>
+            <div style={{ position: "absolute", bottom: 0, right: 0, width: 22, height: 22, background: T.accent, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#030712", pointerEvents: "none" }}>✎</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, flex: 1 }}>
+            <div>
+              <div style={{ fontSize: 11, color: T.textDim, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Namn</div>
+              <input style={inp} value={profile.name || ""} onChange={e => onProfileChange({ ...profile, name: e.target.value })} placeholder="Ditt namn" />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: T.textDim, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Handicap</div>
+              <input style={inp} value={profile.handicap || ""} onChange={e => onProfileChange({ ...profile, handicap: e.target.value })} placeholder="t.ex. 24.5" type="number" step="0.1" />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: T.textDim, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Hemmabana</div>
+              <select style={{ ...inp, cursor: "pointer" }} value={profile.homeCourse || ""} onChange={e => onProfileChange({ ...profile, homeCourse: e.target.value })}>
+                <option value="">Välj bana</option>
+                {allCourseList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+        {/* Inline emoji picker */}
+        {showAvatarPicker && (
+          <div style={{ borderTop: "1px solid " + T.border, paddingTop: 16 }}>
+            <div style={{ fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Välj avatar</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {AVATARS.map(av => (
+                <button key={av} onClick={() => { onProfileChange({ ...profile, avatar: av }); setShowAvatarPicker(false); }} style={{ fontSize: 26, padding: "6px 8px", border: profile.avatar === av ? "2px solid " + T.accent : "2px solid transparent", borderRadius: 10, background: profile.avatar === av ? T.bgActive : "transparent", cursor: "pointer" }}>{av}</button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Boll ── */}
+      {sec("⛳", "Boll")}
+      <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 11, color: T.textDim, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Märke</div>
+            <input style={inp} value={ball.brand || ""} onChange={e => onBagChange({ ...bag, ball: { ...ball, brand: e.target.value } })} placeholder="t.ex. Titleist" />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: T.textDim, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Modell</div>
+            <input style={inp} value={ball.model || ""} onChange={e => onBagChange({ ...bag, ball: { ...ball, model: e.target.value } })} placeholder="t.ex. Pro V1" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Bag / Klubbor ── */}
+      {sec("🎒", "Bag")}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {CAT_ORDER.map(cat => {
+          const catClubs = clubs.filter(c => c.cat === cat);
+          return (
+            <div key={cat} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "10px 16px", borderBottom: "1px solid " + T.border, background: T.bgDeep, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 14 }}>{catEmojis[cat]}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: T.textDim, letterSpacing: 1, textTransform: "uppercase" }}>{cat}</span>
+              </div>
+              {catClubs.map((club, idx) => (
+                <div key={club.id} style={{ padding: "11px 16px", borderBottom: idx < catClubs.length - 1 ? "1px solid " + T.border : "none", display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 68, fontSize: 13, fontWeight: 600, color: T.textMuted, flexShrink: 0 }}>{club.label}</div>
+                  <button onClick={() => toggleFav(club.id)} title="Favoritklubb" style={{ fontSize: 15, background: "transparent", border: "none", cursor: "pointer", color: club.fav ? "#fbbf24" : T.textGhost, padding: "0 2px", flexShrink: 0, lineHeight: 1 }}>★</button>
+                  {editingClub === club.id ? (
+                    <>
+                      <input style={{ ...inp, flex: 1 }} value={club.brand} onChange={e => updateClub(club.id, "brand", e.target.value)} placeholder="Märke (t.ex. Titleist)" />
+                      <input style={{ ...inp, flex: 1 }} value={club.model} onChange={e => updateClub(club.id, "model", e.target.value)} placeholder="Modell (t.ex. T100)" />
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        <input style={{ ...inp, width: 72 }} value={club.dist} onChange={e => updateClub(club.id, "dist", e.target.value)} placeholder="m" type="number" />
+                        <span style={{ fontSize: 11, color: T.textFaint, whiteSpace: "nowrap" }}>m</span>
+                      </div>
+                      <button onClick={() => setEditingClub(null)} style={{ padding: "6px 14px", background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 8, color: "#030712", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>Klar</button>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ flex: 1, fontSize: 13, color: (club.brand || club.model) ? T.textSecondary : T.textGhost }}>
+                        {(club.brand || club.model) ? [club.brand, club.model].filter(Boolean).join(" ") : "Lägg till info..."}
+                      </div>
+                      {club.dist && <div style={{ fontSize: 13, color: T.accent, fontWeight: 700, marginRight: 4 }}>{club.dist} m</div>}
+                      <button onClick={() => setEditingClub(club.id)} style={{ padding: "5px 12px", background: "transparent", border: "1px solid " + T.border, borderRadius: 8, color: T.textDim, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>Redigera</button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Säsongsmål ── */}
+      {sec("🎯", "Säsongsmål")}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 20 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>🏌️ Scoringmål</div>
+          <div style={{ fontSize: 11, color: T.textFaint, marginBottom: 14 }}>Bästa runda du vill uppnå i år</div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
+            <span style={{ fontSize: 13, color: T.textDim }}>Under</span>
+            <input style={{ ...inp, width: 80 }} value={goals.scoreGoal || ""} onChange={e => onGoalsChange({ ...goals, scoreGoal: e.target.value })} placeholder="85" type="number" />
+            <span style={{ fontSize: 13, color: T.textDim }}>slag</span>
+          </div>
+          {goals.scoreGoal && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: T.textFaint }}>Bästa runda: {bestScore ?? "-"}</span>
+                <span style={{ fontSize: 12, color: scoreGoalMet ? "#4ade80" : T.textDim }}>{scoreGoalMet ? "✓ Uppnått!" : "Mål: " + goals.scoreGoal}</span>
+              </div>
+              <div style={{ height: 8, background: T.border, borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: scoreBarPct + "%", background: scoreGoalMet ? "linear-gradient(90deg,#16a34a,#4ade80)" : "linear-gradient(90deg,#ea580c,#fb923c)", borderRadius: 99, transition: "width 0.4s" }} />
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 20 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>📉 Handicap-mål</div>
+          <div style={{ fontSize: 11, color: T.textFaint, marginBottom: 14 }}>Handicap du vill uppnå i år</div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
+            <span style={{ fontSize: 13, color: T.textDim }}>HCP</span>
+            <input style={{ ...inp, width: 80 }} value={goals.hcpGoal || ""} onChange={e => onGoalsChange({ ...goals, hcpGoal: e.target.value })} placeholder="18.0" type="number" step="0.1" />
+          </div>
+          {goals.hcpGoal && profile.handicap && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: T.textFaint }}>Aktuell HCP: {profile.handicap}</span>
+                <span style={{ fontSize: 12, color: hcpGoalMet ? "#4ade80" : T.textDim }}>{hcpGoalMet ? "✓ Uppnått!" : "Mål: " + goals.hcpGoal}</span>
+              </div>
+              <div style={{ height: 8, background: T.border, borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: hcpBarPct + "%", background: hcpGoalMet ? "linear-gradient(90deg,#16a34a,#4ade80)" : "linear-gradient(90deg,#3b82f6,#60a5fa)", borderRadius: 99, transition: "width 0.4s" }} />
+              </div>
+            </div>
+          )}
+          {goals.hcpGoal && !profile.handicap && (
+            <div style={{ fontSize: 12, color: T.textFaint }}>Ange din aktuella handicap i profilen ovan</div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Spelstatistik per par-typ ── */}
+      {rounds.length > 0 && (
+        <>
+          {sec("📊", "Spelstatistik per par-typ")}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
+            {[3, 4, 5].map(par => {
+              const st   = parStats[par];
+              const avg  = st.count > 0 ? (st.total / st.count).toFixed(2) : null;
+              const diff = avg !== null ? (parseFloat(avg) - par) : null;
+              const col  = diff === null ? T.textGhost : diff < 0 ? "#4ade80" : diff > 0 ? "#f87171" : "#94a3b8";
+              return (
+                <div key={par} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 20, textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Par {par}</div>
+                  <div style={{ fontSize: 36, fontWeight: 900, lineHeight: 1, color: avg ? col : T.textGhost }}>{avg ?? "-"}</div>
+                  <div style={{ fontSize: 13, color: col, marginTop: 6 }}>{diff !== null ? (diff > 0 ? "+" : "") + diff.toFixed(2) + " mot par" : ""}</div>
+                  <div style={{ fontSize: 11, color: T.textFaint, marginTop: 4 }}>{st.count} hål spelade</div>
+                </div>
+              );
+            })}
+          </div>
+          {bestHole && worstHole && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              {[
+                { h: bestHole,  label: "Bästa hål",    col: "#4ade80", bg: T.bgActive, brd: T.accent },
+                { h: worstHole, label: "Svåraste hål",  col: "#f87171", bg: "#200000",  brd: "#f87171" },
+              ].map(({ h, label, col, bg, brd }) => (
+                <div key={label} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: 20, display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ width: 50, height: 50, borderRadius: "50%", background: bg, border: "2px solid " + brd, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, color: col, flexShrink: 0 }}>{h.hole}</div>
+                  <div>
+                    <div style={{ fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>{label}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: col }}>{h.avg.toFixed(2)} <span style={{ fontSize: 12, color: T.textFaint, fontWeight: 400 }}>snitt</span></div>
+                    <div style={{ fontSize: 12, color: col }}>{h.diff > 0 ? "+" : ""}{h.diff.toFixed(2)} mot par {h.par}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+    </div>
+  );
+}
+
 function DeleteRoundButton({ onDelete }) {
   const [confirming, setConfirming] = useState(false);
   if (confirming) {
@@ -902,6 +1166,9 @@ export default function GolfApp() {
   const [updateMsg, setUpdateMsg] = useState(null);
   const [customCourses, setCustomCourses] = useState([]);
   const [showAddCourse, setShowAddCourse] = useState(false);
+  const [profile, setProfile] = useState({ name: "", handicap: "", homeCourse: "", avatar: "🏌️" });
+  const [bag, setBag]         = useState({ clubs: DEFAULT_CLUBS, ball: { brand: "", model: "" } });
+  const [goals, setGoals]     = useState({ scoreGoal: "", hcpGoal: "" });
 
   T = darkMode ? DARK : LIGHT;
   const allCoursesMap = { ...COURSES, ...Object.fromEntries(customCourses.map(c => [c.id, c])) };
@@ -922,6 +1189,12 @@ export default function GolfApp() {
           if (course)  setCourseId(course);
           const customC = await s.get("customCourses");
           if (customC) setCustomCourses(customC);
+          const prof = await s.get("profile");
+          if (prof)   setProfile(prof);
+          const savedBag = await s.get("bag");
+          if (savedBag) setBag(savedBag);
+          const savedGoals = await s.get("goals");
+          if (savedGoals) setGoals(savedGoals);
         }
       } catch {}
       setStorageReady(true);
@@ -941,6 +1214,21 @@ export default function GolfApp() {
   useEffect(() => {
     try { window.electronAPI?.store.set("course", courseId); } catch {}
   }, [courseId]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    try { window.electronAPI?.store.set("profile", profile); } catch {}
+  }, [profile, storageReady]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    try { window.electronAPI?.store.set("bag", bag); } catch {}
+  }, [bag, storageReady]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    try { window.electronAPI?.store.set("goals", goals); } catch {}
+  }, [goals, storageReady]);
 
   useEffect(() => {
     window.electronAPI?.onUpdateStatus((msg) => setUpdateMsg(msg));
@@ -1469,7 +1757,7 @@ export default function GolfApp() {
         </div>
         <div style={{ width: 1, height: 24, background: T.border }} />
         <span style={{ fontSize: 16, color: T.textMuted }}>
-          {playerName || "Din rond"}
+          {playerName || profile.name || "Din rond"}
           {playedHoles > 0 && <span style={{ color: scoreColor, marginLeft: 8 }}>{scoreLabel}</span>}
         </span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 24, alignItems: "center" }}>
@@ -1500,11 +1788,15 @@ export default function GolfApp() {
 
         <div style={{ width: 220, background: T.bgSecondary, borderRight: "1px solid " + T.topbarBorder, display: "flex", flexDirection: "column", flexShrink: 0 }}>
           <div style={{ padding: "16px 12px" }}>
-            {[["scorecard","Scorekort","📋"],["stats","Statistik","📊"],["history","Historik","🕒"],["records","Rekord","🏆"]].map(tab => (
+            {[["scorecard","Scorekort","📋"],["stats","Statistik","📊"],["history","Historik","🕒"],["records","Rekord","🏆"],["bag","Min Bag","🎒"]].map(tab => (
               <button key={tab[0]} onClick={() => { setView(tab[0]); setEditingRound(null); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", marginBottom: 4, background: view === tab[0] ? T.bgActive : "transparent", border: "1px solid " + (view === tab[0] ? T.borderActive : "transparent"), borderRadius: 8, color: view === tab[0] ? T.accent : T.textDim, fontSize: 13, fontWeight: view === tab[0] ? 700 : 400, cursor: "pointer", textAlign: "left" }}>
                 <span>{tab[2]}</span><span>{tab[1]}</span>
               </button>
             ))}
+            <div style={{ height: 1, background: T.border, margin: "8px 2px" }} />
+            <button onClick={() => setShowImport(true)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "transparent", border: "1px dashed " + T.border, borderRadius: 8, color: T.accent, fontSize: 13, fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+              <span>↑</span><span>Importera rond</span>
+            </button>
           </div>
           <div style={{ height: 1, background: T.border, margin: "0 12px" }} />
           {records && (() => {
@@ -1526,34 +1818,7 @@ export default function GolfApp() {
               </div>
             );
           })()}
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
-            <div style={{ fontSize: 10, color: T.textFaint, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Översikt</div>
-            {[front9, back9].map((group, gi) => (
-              <div key={gi} style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 10, color: T.textGhost, letterSpacing: 1, paddingLeft: 4, marginBottom: 4 }}>{gi === 0 ? "FRONT 9" : "BACK 9"}</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4 }}>
-                  {group.map(hole => {
-                    const sc = scores[hole.hole];
-                    const res = getResult(sc, hole.par);
-                    return (
-                      <button key={hole.hole} onClick={() => { setView("scorecard"); setActiveHole(hole.hole); }} style={{ padding: "6px 4px", borderRadius: 6, border: "1px solid " + (activeHole === hole.hole && view === "scorecard" ? T.accent : T.border), background: sc ? res?.bg : T.bgCircle, cursor: "pointer", textAlign: "center" }}>
-                        <div style={{ fontSize: 10, color: T.textFaint }}>{hole.hole}</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: sc ? (res?.color || "#fff") : T.textGhost }}>{sc || "-"}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ padding: "12px", borderTop: "1px solid " + T.border }}>
-            {[["Front 9", f9Score, f9Par], ["Back 9", b9Score, b9Par]].map(row => (
-              <div key={row[0]} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 4px" }}>
-                <span style={{ fontSize: 12, color: T.textFaint }}>{row[0]}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: row[1] ? (row[1]-row[2] < 0 ? "#4ade80" : row[1]-row[2] > 0 ? "#f87171" : "#94a3b8") : T.textGhost }}>{row[1] || "-"}</span>
-              </div>
-            ))}
-          </div>
+          <div style={{ flex: 1 }} />
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", background: T.bgApp }}>
@@ -1827,7 +2092,7 @@ export default function GolfApp() {
                     <button onClick={saveEditRound} style={{ marginLeft: "auto", padding: "10px 28px", background: "linear-gradient(135deg,#16a34a,#4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Spara ändringar</button>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
-                    {[["Total score", editTotal || "-", (editDiff > 0 ? "+" : "") + (editDiff !== 0 ? editDiff : "E") + " mot par", editDiff < 0 ? "#4ade80" : editDiff > 0 ? "#f87171" : "#94a3b8"],["Puttar", editPutTotal || "-", "", "#60a5fa"],["Datum", editRound?.dateLabel, "", T.textMuted],["Spelare", editRound?.playerName || "-", "", T.textMuted]].map(kpi => (
+                    {[["Total score", editTotal || "-", (editDiff > 0 ? "+" : "") + (editDiff !== 0 ? editDiff : "E") + " mot par", editDiff < 0 ? "#4ade80" : editDiff > 0 ? "#f87171" : "#94a3b8"],["Puttar", editPutTotal || "-", "", "#60a5fa"],["Datum", editRound?.dateLabel, "", T.textMuted],editRound?.playerName ? ["Spelare", editRound.playerName, "", T.textMuted] : null].filter(Boolean).map(kpi => (
                       <div key={kpi[0]} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 18px" }}>
                         <div style={{ fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{kpi[0]}</div>
                         <div style={{ fontSize: 24, fontWeight: 900, color: kpi[3] }}>{kpi[1]}</div>
@@ -1881,8 +2146,8 @@ export default function GolfApp() {
                         return (
                           <div key={round.id} style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16 }}>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>{round.playerName || "Okänd spelare"}</div>
-                              {round.courseName && <div style={{ fontSize: 11, color: T.accent, fontWeight: 600, marginTop: 2 }}>{round.courseName}</div>}
+                              {round.playerName && <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>{round.playerName}</div>}
+                              {round.courseName && <div style={{ fontSize: 11, color: T.accent, fontWeight: 600, marginTop: round.playerName ? 2 : 0 }}>{round.courseName}</div>}
                               <div style={{ fontSize: 12, color: T.textDim, marginTop: 2 }}>{new Date(round.date).toLocaleDateString("sv-SE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
                             </div>
                             <div style={{ textAlign: "center", width: 64 }}>
@@ -1893,12 +2158,10 @@ export default function GolfApp() {
                               <div style={{ fontSize: 28, fontWeight: 900, color: T.textPrimary }}>{round.totalScore}</div>
                               <div style={{ fontSize: 10, color: T.textDim }}>slag</div>
                             </div>
-                            {round.totalPutts > 0 && (
-                              <div style={{ textAlign: "center", width: 64 }}>
-                                <div style={{ fontSize: 28, fontWeight: 900, color: "#60a5fa" }}>{round.totalPutts}</div>
-                                <div style={{ fontSize: 10, color: T.textDim }}>puttar</div>
-                              </div>
-                            )}
+                            <div style={{ textAlign: "center", width: 64 }}>
+                              <div style={{ fontSize: 28, fontWeight: 900, color: round.totalPutts > 0 ? "#60a5fa" : T.textFaint }}>{round.totalPutts > 0 ? round.totalPutts : "-"}</div>
+                              <div style={{ fontSize: 10, color: T.textDim }}>puttar</div>
+                            </div>
                             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                               <button onClick={() => startEditRound(round)} style={{ padding: "8px 18px", background: "transparent", border: "1px solid " + T.borderActive, borderRadius: 8, color: T.accent, fontSize: 13, cursor: "pointer" }}>Redigera</button>
                               <DeleteRoundButton onDelete={() => saveRounds(rounds.filter(r => r.id !== round.id))} />
@@ -1915,6 +2178,15 @@ export default function GolfApp() {
 
           {view === "records" && (
             <RecordsView records={records} T={T} darkMode={darkMode} />
+          )}
+
+          {view === "bag" && (
+            <BagView
+              profile={profile}   onProfileChange={setProfile}
+              bag={bag}           onBagChange={setBag}
+              goals={goals}       onGoalsChange={setGoals}
+              rounds={rounds}     allCourseList={allCourseList}
+            />
           )}
 
         </div>
