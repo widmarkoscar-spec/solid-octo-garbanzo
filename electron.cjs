@@ -1,6 +1,9 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { autoUpdater } = require("electron-updater");
+const Store = require("electron-store");
+
+const store = new Store();
 
 let win;
 
@@ -40,6 +43,11 @@ autoUpdater.on("error", (err) => {
 ipcMain.on("install-update", () => {
   autoUpdater.quitAndInstall();
 });
+
+// Lokal datalagring — sparas i användarens AppData-mapp
+ipcMain.handle("store-get", (_e, key) => store.get(key));
+ipcMain.handle("store-set", (_e, key, value) => store.set(key, value));
+ipcMain.handle("store-delete", (_e, key) => store.delete(key));
 
 app.whenReady().then(createWindow);
 app.on("window-all-closed", () => app.quit());

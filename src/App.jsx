@@ -527,9 +527,7 @@ export default function GolfApp() {
   const [rounds, setRounds]         = useState([]);
   const [storageReady, setStorageReady] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
-  const [darkMode, setDarkMode]     = useState(() => {
-    try { return localStorage.getItem("sgk_theme") !== "light"; } catch { return true; }
-  });
+  const [darkMode, setDarkMode]     = useState(true);
   const [showImport, setShowImport] = useState(false);
   const [editingRound, setEditingRound] = useState(null);
   const [editScores, setEditScores] = useState({});
@@ -541,9 +539,7 @@ export default function GolfApp() {
   const [gir10, setGir10]             = useState(false);
   const [hist10, setHist10]           = useState(false);
   const [avg10, setAvg10]             = useState(false);
-  const [courseId, setCourseId]     = useState(() => {
-    try { return localStorage.getItem("sgk_course") || "surahammar"; } catch { return "surahammar"; }
-  });
+  const [courseId, setCourseId]     = useState("surahammar");
   const [updateMsg, setUpdateMsg] = useState(null);
 
   T = darkMode ? DARK : LIGHT;
@@ -551,24 +547,34 @@ export default function GolfApp() {
   HOLES = COURSE.holes; // update global
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setRounds(JSON.parse(saved));
-    } catch {}
-    setStorageReady(true);
+    const loadData = async () => {
+      try {
+        const s = window.electronAPI?.store;
+        if (s) {
+          const saved  = await s.get("rounds");
+          if (saved)   setRounds(saved);
+          const theme  = await s.get("theme");
+          if (theme !== undefined) setDarkMode(theme !== "light");
+          const course = await s.get("course");
+          if (course)  setCourseId(course);
+        }
+      } catch {}
+      setStorageReady(true);
+    };
+    loadData();
   }, []);
 
   useEffect(() => {
     if (!storageReady) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(rounds)); } catch {}
+    try { window.electronAPI?.store.set("rounds", rounds); } catch {}
   }, [rounds, storageReady]);
 
   useEffect(() => {
-    try { localStorage.setItem("sgk_theme", darkMode ? "dark" : "light"); } catch {}
+    try { window.electronAPI?.store.set("theme", darkMode ? "dark" : "light"); } catch {}
   }, [darkMode]);
 
   useEffect(() => {
-    try { localStorage.setItem("sgk_course", courseId); } catch {}
+    try { window.electronAPI?.store.set("course", courseId); } catch {}
   }, [courseId]);
 
   useEffect(() => {
@@ -577,7 +583,7 @@ export default function GolfApp() {
 
   const saveRounds = (updated) => {
     setRounds(updated);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch {}
+    try { window.electronAPI?.store.set("rounds", updated); } catch {}
   };
 
   const front9  = HOLES.slice(0, 9);
@@ -678,12 +684,12 @@ export default function GolfApp() {
     const updated = [...rounds, newRound];
     setRounds(updated);
     setSaveStatus("saving");
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); setSaveStatus("saved"); setTimeout(() => setSaveStatus(""), 2500); }
+    try { window.electronAPI?.store.set("rounds", updated); setSaveStatus("saved"); setTimeout(() => setSaveStatus(""), 2500); }
     catch { setSaveStatus("error"); }
   };
 
   const startNewRound = () => { setScores({}); setPutts({}); setActiveHole(1); setView("scorecard"); };
-  const clearHistory  = () => { setRounds([]); try { localStorage.removeItem(STORAGE_KEY); } catch {} };
+  const clearHistory  = () => { setRounds([]); try { window.electronAPI?.store.delete("rounds"); } catch {} };
 
   const startEditRound = (round) => {
     setEditScores({ ...round.scores });
