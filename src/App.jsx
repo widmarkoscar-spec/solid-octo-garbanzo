@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { version } from "../package.json";
 
 const COURSES = {
   surahammar: {
@@ -791,7 +792,10 @@ export default function GolfApp() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 20 }}>⛳</span>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 900, color: T.textPrimary, letterSpacing: 1 }}>Slagbok</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              <div style={{ fontSize: 13, fontWeight: 900, color: T.textPrimary, letterSpacing: 1 }}>Slagbok</div>
+              <div style={{ fontSize: 9, color: T.textFaint, letterSpacing: 0.5 }}>v{version}</div>
+            </div>
             <div style={{ fontSize: 10, color: T.accent, letterSpacing: 2, textTransform: "uppercase", fontWeight: 600 }}>{COURSE.name}</div>
           </div>
         </div>
