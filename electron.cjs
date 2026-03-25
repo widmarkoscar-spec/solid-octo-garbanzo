@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("path");
 const { autoUpdater } = require("electron-updater");
 const Store = require("electron-store");
@@ -49,5 +49,8 @@ ipcMain.handle("store-get", (_e, key) => store.get(key));
 ipcMain.handle("store-set", (_e, key, value) => store.set(key, value));
 ipcMain.handle("store-delete", (_e, key) => store.delete(key));
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
+  createWindow();
+});
 app.on("window-all-closed", () => app.quit());
