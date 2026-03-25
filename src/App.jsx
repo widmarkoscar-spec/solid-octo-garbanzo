@@ -81,6 +81,19 @@ const COURSES = {
 
 const COURSE_LIST = [COURSES.surahammar, COURSES.angso, COURSES.fullero];
 
+const LEVELS = [
+  { level: 1,  title: "Golfgrodd",         emoji: "🌱", xpRequired: 0      },
+  { level: 2,  title: "Fairway-vandrare",  emoji: "🚶", xpRequired: 2000   },
+  { level: 3,  title: "Bagbäraren",        emoji: "🎒", xpRequired: 6000   },
+  { level: 4,  title: "Tee-tid-fanatiker", emoji: "☀️", xpRequired: 14000  },
+  { level: 5,  title: "Greenläsaren",      emoji: "🌿", xpRequired: 28000  },
+  { level: 6,  title: "Fairway-riddaren",  emoji: "🏌️", xpRequired: 50000  },
+  { level: 7,  title: "Hålmästaren",       emoji: "⛳", xpRequired: 82000  },
+  { level: 8,  title: "Birdiejägaren",     emoji: "🔥", xpRequired: 128000 },
+  { level: 9,  title: "Klubblegenden",     emoji: "👑", xpRequired: 192000 },
+  { level: 10, title: "Örnen",             emoji: "🦅", xpRequired: 280000 },
+];
+
 const STORAGE_KEY = "sgk_rounds";
 
 const DARK = {
@@ -686,6 +699,56 @@ function RecordsView({ records, T, darkMode }) {
 
   return (
     <div style={{ padding: "24px 32px" }}>
+
+      {/* Nivåkort — överst */}
+      {(() => {
+        const lvl = records.currentLevel;
+        const nxt = records.nextLevel;
+        const xpInto = records.xpIntoLevel;
+        const xpRange = nxt ? nxt.xpRequired - lvl.xpRequired : 1;
+        const pct = nxt ? Math.min(100, Math.round((xpInto / xpRange) * 100)) : 100;
+        const bd = records.xpBreakdown;
+        return (
+          <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 14, padding: "24px 28px", marginBottom: 28 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+              <div style={{ fontSize: 40, lineHeight: 1 }}>{lvl.emoji}</div>
+              <div>
+                <div style={{ fontSize: 13, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>Nivå {lvl.level}</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary, lineHeight: 1.1 }}>{lvl.title}</div>
+              </div>
+              <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: T.accent, lineHeight: 1 }}>{records.totalXP.toLocaleString("sv-SE")}</div>
+                <div style={{ fontSize: 12, color: T.textDim }}>total XP</div>
+              </div>
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ height: 12, background: T.border, borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: pct + "%", background: "linear-gradient(90deg, #16a34a, #4ade80)", borderRadius: 99, transition: "width 0.5s ease" }} />
+              </div>
+            </div>
+            <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 16 }}>
+              {nxt
+                ? records.xpNeededForNext.toLocaleString("sv-SE") + " XP till " + nxt.emoji + " " + nxt.title
+                : "MAX LEVEL"}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, paddingTop: 14, borderTop: "1px solid " + T.border }}>
+              {[
+                ["Rundor",       bd.xpRounds,       "#4ade80"],
+                ["Resultat",     bd.xpResults,      "#fbbf24"],
+                ["Puttar",       bd.xpPutts,        "#60a5fa"],
+                ["Streaks",      bd.xpStreaks,       "#f97316"],
+                ["Achievements", bd.xpAchievements, "#a78bfa"],
+              ].map(([label, val, color]) => (
+                <div key={label} style={{ textAlign: "center", background: T.bgDeep, borderRadius: 8, padding: "8px 4px" }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color }}>{val.toLocaleString("sv-SE")} <span style={{ fontSize: 10 }}>XP</span></div>
+                  <div style={{ fontSize: 10, color: T.textDim, marginTop: 2 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 22, fontWeight: 900, color: T.textPrimary }}>Personliga rekord</div>
         <div style={{ fontSize: 13, color: T.textFaint, marginTop: 2 }}>Baserat på alla sparade ronder</div>
@@ -1194,7 +1257,46 @@ export default function GolfApp() {
       { id: "early_bird",       emoji: "🌅", name: "Tidig fågel",        description: "Spela 3 rundor",                     unlocked: totalRounds >= 3   },
     ].sort((a, b) => (b.unlocked ? 1 : 0) - (a.unlocked ? 1 : 0));
 
-    records = { bestRound, mostBirdies, bestHole, bestFront9, bestBack9, mostParOrBetter, currentStreak, longestStreak, roundsThisMonth, roundsThisYear, achievements };
+    // 10. XP calculation
+    let xpRounds = 0, xpResults = 0, xpPutts = 0;
+    rounds.forEach(r => {
+      // Per round: completing a round
+      xpRounds += 40;
+      // Score bonuses
+      if (r.totalScore > 0) {
+        if (r.totalScore < 80)       xpRounds += 80;
+        else if (r.totalScore < 90)  xpRounds += 40;
+        else if (r.totalScore < 100) xpRounds += 20;
+      }
+      // Per hole results
+      HOLES.forEach(h => {
+        const s = r.scores[h.hole];
+        if (!s) return;
+        if (s === 1 && h.par === 3) { xpResults += 200; return; } // HIO
+        const diff = s - h.par;
+        if (diff <= -2) xpResults += 60;       // eagle or better
+        else if (diff === -1) xpResults += 20; // birdie
+        else if (diff === 0)  xpResults += 5;  // par
+        // Per putt counts
+        const p = (r.putts || {})[h.hole];
+        if (p === 1) xpPutts += 8;
+        else if (p === 2) xpPutts += 3;
+      });
+    });
+    const xpStreaks = longestStreak * 20;
+    const xpAchievements = achievements.filter(a => a.unlocked).length * 50;
+    const totalXP = xpRounds + xpResults + xpPutts + xpStreaks + xpAchievements;
+
+    // Determine level
+    let currentLevel = LEVELS[0];
+    for (let i = LEVELS.length - 1; i >= 0; i--) {
+      if (totalXP >= LEVELS[i].xpRequired) { currentLevel = LEVELS[i]; break; }
+    }
+    const nextLevel = currentLevel.level < 10 ? LEVELS[currentLevel.level] : null;
+    const xpIntoLevel = totalXP - currentLevel.xpRequired;
+    const xpNeededForNext = nextLevel ? nextLevel.xpRequired - totalXP : 0;
+
+    records = { bestRound, mostBirdies, bestHole, bestFront9, bestBack9, mostParOrBetter, currentStreak, longestStreak, roundsThisMonth, roundsThisYear, achievements, totalXP, currentLevel, nextLevel, xpIntoLevel, xpNeededForNext, xpBreakdown: { xpRounds, xpResults, xpPutts, xpStreaks, xpAchievements } };
   }
 
   const handleScore = (hole, val) => setScores(prev => ({ ...prev, [hole]: val }));
@@ -1398,6 +1500,25 @@ export default function GolfApp() {
             ))}
           </div>
           <div style={{ height: 1, background: T.border, margin: "0 12px" }} />
+          {records && (() => {
+            const lvl = records.currentLevel;
+            const nxt = records.nextLevel;
+            const pct = nxt
+              ? Math.min(100, Math.round((records.xpIntoLevel / (nxt.xpRequired - lvl.xpRequired)) * 100))
+              : 100;
+            return (
+              <div style={{ padding: "12px 14px 10px", borderBottom: "1px solid " + T.border }}>
+                <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 500, display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
+                  <span style={{ fontSize: 14 }}>{lvl.emoji}</span>
+                  <span style={{ color: T.textDim }}>{lvl.title}</span>
+                </div>
+                <div style={{ height: 6, background: T.border, borderRadius: 99, overflow: "hidden", marginBottom: 5 }}>
+                  <div style={{ height: "100%", width: pct + "%", background: "linear-gradient(90deg, #16a34a, #4ade80)", borderRadius: 99, transition: "width 0.4s ease" }} />
+                </div>
+                <div style={{ fontSize: 11, color: T.textDim }}>{records.totalXP.toLocaleString("sv-SE")} XP</div>
+              </div>
+            );
+          })()}
           <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
             <div style={{ fontSize: 10, color: T.textFaint, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Översikt</div>
             {[front9, back9].map((group, gi) => (
