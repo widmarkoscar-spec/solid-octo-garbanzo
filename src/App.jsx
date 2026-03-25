@@ -755,6 +755,37 @@ function RecordsView({ records, T, darkMode }) {
           </div>
         ))}
       </div>
+
+      {records.achievements && (() => {
+        const unlockedCount = records.achievements.filter(a => a.unlocked).length;
+        return (
+          <>
+            <div style={{ marginTop: 32, marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>
+                Achievements ({unlockedCount}/{records.achievements.length})
+              </div>
+              <div style={{ flex: 1, height: 1, background: T.border }} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+              {records.achievements.map(a => (
+                <div key={a.id} style={{
+                  background: a.unlocked ? T.bgActive : T.bgDeep,
+                  border: "1px solid " + (a.unlocked ? T.borderActive : T.border),
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                }}>
+                  <div style={{ fontSize: 28, opacity: a.unlocked ? 1 : 0.3, lineHeight: 1, marginBottom: 2 }}>{a.emoji}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: a.unlocked ? T.accent : T.textFaint, opacity: a.unlocked ? 1 : 0.4, lineHeight: 1.2 }}>{a.name}</div>
+                  <div style={{ fontSize: 11, color: T.textDim, opacity: a.unlocked ? 1 : 0.4, lineHeight: 1.3 }}>{a.description}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -1075,7 +1106,95 @@ export default function GolfApp() {
     }).length;
     const roundsThisYear = rounds.filter(r => new Date(r.date).getFullYear() === now.getFullYear()).length;
 
-    records = { bestRound, mostBirdies, bestHole, bestFront9, bestBack9, mostParOrBetter, currentStreak, longestStreak, roundsThisMonth, roundsThisYear };
+    // 9. Achievements
+    const totalRounds = rounds.length;
+
+    // Has any birdie ever?
+    let hasBirdie = false;
+    let hasEagle = false;
+    rounds.forEach(r => {
+      HOLES.forEach(h => {
+        const s = r.scores[h.hole];
+        if (!s) return;
+        if (s <= h.par - 1) hasBirdie = true;
+        if (s <= h.par - 2) hasEagle = true;
+      });
+    });
+
+    // Hat trick: 3+ birdies on a single round
+    let hasHatTrick = false;
+    rounds.forEach(r => {
+      let birdies = 0;
+      HOLES.forEach(h => { if (r.scores[h.hole] && r.scores[h.hole] <= h.par - 1) birdies++; });
+      if (birdies >= 3) hasHatTrick = true;
+    });
+
+    // Perfect front 9: all scored holes on front 9 are par or better (all 9 must have scores)
+    let hasPerfectFront = false;
+    rounds.forEach(r => {
+      const front = HOLES.slice(0, 9);
+      const allScored = front.every(h => r.scores[h.hole]);
+      if (allScored && front.every(h => r.scores[h.hole] <= h.par)) hasPerfectFront = true;
+    });
+
+    // Perfect back 9: all scored holes on back 9 are par or better (all 9 must have scores)
+    let hasPerfectBack = false;
+    rounds.forEach(r => {
+      const back = HOLES.slice(9);
+      const allScored = back.every(h => r.scores[h.hole]);
+      if (allScored && back.every(h => r.scores[h.hole] <= h.par)) hasPerfectBack = true;
+    });
+
+    // Score-based achievements
+    const allTotalPar18 = HOLES.reduce((s, h) => s + h.par, 0);
+    let hasSub100 = false, hasSub90 = false, hasSub80 = false, hasSub72 = false;
+    rounds.forEach(r => {
+      if (r.totalScore > 0) {
+        if (r.totalScore < 100) hasSub100 = true;
+        if (r.totalScore < 90)  hasSub90  = true;
+        if (r.totalScore < 80)  hasSub80  = true;
+        if (r.totalScore < allTotalPar18) hasSub72 = true;
+      }
+    });
+
+    // Putt achievements
+    let hasGoodGreen = false;
+    let hasOnePuttMaster = false;
+    rounds.forEach(r => {
+      const puttMap = r.putts || {};
+      const holesWithPutts = HOLES.filter(h => puttMap[h.hole] > 0);
+      if (holesWithPutts.length >= 9) {
+        const totalPuttsRound = holesWithPutts.reduce((s, h) => s + puttMap[h.hole], 0);
+        if (totalPuttsRound / holesWithPutts.length < 2.0) hasGoodGreen = true;
+      }
+      const onePutts = HOLES.filter(h => puttMap[h.hole] === 1).length;
+      if (onePutts >= 5) hasOnePuttMaster = true;
+    });
+
+    const achievements = [
+      { id: "first_round",      emoji: "🏌️", name: "Första steget",    description: "Spela 1 rond",                       unlocked: totalRounds >= 1   },
+      { id: "five_rounds",      emoji: "🎯", name: "På banan",          description: "Spela 5 rundor",                     unlocked: totalRounds >= 5   },
+      { id: "ten_rounds",       emoji: "🔟", name: "Tionde rundan",      description: "Spela 10 rundor",                    unlocked: totalRounds >= 10  },
+      { id: "veteran",          emoji: "🏆", name: "Veteran",            description: "Spela 25 rundor",                    unlocked: totalRounds >= 25  },
+      { id: "hundred_club",     emoji: "💯", name: "100-klubben",        description: "Spela 100 rundor",                   unlocked: totalRounds >= 100 },
+      { id: "first_birdie",     emoji: "🐦", name: "Första birdien",     description: "Få en birdie",                       unlocked: hasBirdie          },
+      { id: "eagle",            emoji: "🦅", name: "Eagle!",             description: "Få en eagle",                        unlocked: hasEagle           },
+      { id: "hat_trick",        emoji: "🎳", name: "Hat trick",          description: "Få 3 birdies på en runda",           unlocked: hasHatTrick        },
+      { id: "perfect_front",    emoji: "⭐", name: "Perfekt front",      description: "Alla hål på front 9 par eller bättre", unlocked: hasPerfectFront  },
+      { id: "perfect_back",     emoji: "🌟", name: "Perfekt back",       description: "Alla hål på back 9 par eller bättre",  unlocked: hasPerfectBack   },
+      { id: "sub100",           emoji: "📉", name: "Bryta 100",          description: "Spela en rond under 100 slag",       unlocked: hasSub100          },
+      { id: "sub90",            emoji: "💪", name: "Bryta 90",           description: "Spela en rond under 90 slag",        unlocked: hasSub90           },
+      { id: "sub80",            emoji: "🔥", name: "Bryta 80",           description: "Spela en rond under 80 slag",        unlocked: hasSub80           },
+      { id: "scratch",          emoji: "👑", name: "Scratch",            description: "Spela en rond under par",            unlocked: hasSub72           },
+      { id: "week_streak",      emoji: "📅", name: "Veckospelare",       description: "2 veckors streak",                   unlocked: longestStreak >= 2 },
+      { id: "month_streak",     emoji: "🗓️", name: "Månadsrutin",        description: "4 veckors streak",                   unlocked: longestStreak >= 4 },
+      { id: "dedicated",        emoji: "🔁", name: "Hängiven",           description: "8 veckors streak",                   unlocked: longestStreak >= 8 },
+      { id: "good_green",       emoji: "⛳", name: "Bra på greenen",     description: "Snitt under 2.0 puttar per hål på en runda", unlocked: hasGoodGreen },
+      { id: "one_putt_master",  emoji: "🎱", name: "One-putt master",    description: "5 one-putts på en runda",            unlocked: hasOnePuttMaster   },
+      { id: "early_bird",       emoji: "🌅", name: "Tidig fågel",        description: "Spela 3 rundor",                     unlocked: totalRounds >= 3   },
+    ].sort((a, b) => (b.unlocked ? 1 : 0) - (a.unlocked ? 1 : 0));
+
+    records = { bestRound, mostBirdies, bestHole, bestFront9, bestBack9, mostParOrBetter, currentStreak, longestStreak, roundsThisMonth, roundsThisYear, achievements };
   }
 
   const handleScore = (hole, val) => setScores(prev => ({ ...prev, [hole]: val }));
