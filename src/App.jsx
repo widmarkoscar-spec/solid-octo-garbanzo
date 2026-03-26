@@ -146,6 +146,25 @@ const LIGHT = {
 let T = DARK;
 let HOLES = COURSES.surahammar.holes; // global, updated by GolfApp
 
+function parseCourseFromScorecard(text) {
+  const SKIP = /^(hal|hål|par|index|slag|j\.brutto|poang|poäng|out|in|total)/i;
+  const lines = text.trim().split("\n").map(l => l.trim()).filter(Boolean);
+  const holes = {};
+  for (const line of lines) {
+    if (SKIP.test(line)) continue;
+    const nums = (line.match(/\d+/g) || []).map(Number);
+    if (nums.length < 3) continue;
+    const [holeNum, par, hcp] = nums;
+    if (holeNum >= 1 && holeNum <= 18 && (par === 3 || par === 4 || par === 5) && hcp >= 1 && hcp <= 18) {
+      holes[holeNum] = { hole: holeNum, par, hcp, name: "Hål " + holeNum };
+    }
+  }
+  const result = Object.values(holes).sort((a, b) => a.hole - b.hole);
+  if (result.length !== 18) return null;
+  if (new Set(result.map(h => h.hcp)).size !== 18) return null;
+  return result;
+}
+
 function parseMinGolfText(text) {
   const SKIP = /^(hal|par|index|slag|j\.brutto|poang|out|in|total)/i;
   const lines = text.trim().split("\n").map(l => l.trim()).filter(Boolean);
@@ -447,11 +466,10 @@ function AddCourseModal({ onClose, onSave, initialCourse }) {
   const [name, setName] = useState(initialCourse?.name || "");
   const [subtitle, setSubtitle] = useState(initialCourse?.subtitle || "");
   const [nameError, setNameError] = useState("");
+  const [scorecardText, setScorecardText] = useState("");
+  const [parseSuccess, setParseSuccess] = useState(false);
   const defaultHoles = Array.from({ length: 18 }, (_, i) => ({
-    hole: i + 1,
-    par: 4,
-    hcp: i + 1,
-    name: "Hål " + (i + 1),
+    hole: i + 1, par: 4, hcp: i + 1, name: "Hål " + (i + 1),
   }));
   const [holes, setHoles] = useState(initialCourse?.holes ? initialCourse.holes.map(h => ({ ...h })) : defaultHoles);
   const [hcpError, setHcpError] = useState("");
@@ -460,6 +478,10 @@ function AddCourseModal({ onClose, onSave, initialCourse }) {
   function goToStep2() {
     if (!name.trim()) { setNameError("Banans namn är obligatoriskt."); return; }
     setNameError("");
+    if (scorecardText.trim()) {
+      const parsed = parseCourseFromScorecard(scorecardText);
+      if (parsed) { setHoles(parsed); setParseSuccess(true); }
+    }
     setStep(2);
   }
 
@@ -523,6 +545,17 @@ function AddCourseModal({ onClose, onSave, initialCourse }) {
                 style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14 }}
               />
             </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontSize: 11, color: T.textDim, display: "block", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Klistra in scorekort (valfritt)</label>
+              <div style={{ fontSize: 12, color: T.textFaint, marginBottom: 8 }}>Klistra in texten från ditt scorekort på mingolf.golf.se — hål, par och index fylls i automatiskt.</div>
+              <textarea
+                placeholder={"Hål  Par  Index  Slag...\n1    4    16    5\n2    3    10    4\n..."}
+                value={scorecardText}
+                onChange={e => setScorecardText(e.target.value)}
+                rows={5}
+                style={{ width: "100%", padding: "10px 12px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "monospace", resize: "vertical", boxSizing: "border-box" }}
+              />
+            </div>
             <button onClick={goToStep2} style={{ width: "100%", padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Nästa →
             </button>
@@ -557,6 +590,7 @@ function AddCourseModal({ onClose, onSave, initialCourse }) {
                 </div>
               ))}
             </div>
+            {parseSuccess && <div style={{ color: "#4ade80", fontSize: 13, marginBottom: 12, padding: "8px 12px", background: "#052e16", borderRadius: 8, border: "1px solid #4ade8033" }}>✓ Hål, par och index har fyllts i automatiskt från scorekortet. Kontrollera och justera vid behov.</div>}
             {hcpError && <div style={{ color: "#f87171", fontSize: 13, marginBottom: 12, padding: "8px 12px", background: "#1c0505", borderRadius: 8, border: "1px solid #ef444433" }}>{hcpError}</div>}
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => setStep(1)} style={{ flex: 1, padding: 12, background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.textDim, fontSize: 14, cursor: "pointer" }}>← Tillbaka</button>
