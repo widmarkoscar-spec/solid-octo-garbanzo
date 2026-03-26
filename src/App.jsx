@@ -1167,6 +1167,7 @@ export default function GolfApp() {
   const [customCourses, setCustomCourses] = useState([]);
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+  const [confirmDeleteCourseId, setConfirmDeleteCourseId] = useState(null);
   const [profile, setProfile] = useState({ name: "", handicap: "", homeCourse: "", avatar: "🏌️" });
   const [bag, setBag]         = useState({ clubs: DEFAULT_CLUBS, ball: { brand: "", model: "" } });
   const [goals, setGoals]     = useState({ scoreGoal: "", hcpGoal: "" });
@@ -1696,17 +1697,33 @@ export default function GolfApp() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 11, color: courseId === course.id ? T.accent : T.textFaint }}>{course.subtitle}</span>
                       {course.id.startsWith("custom_") && (
-                        <div style={{ display: "flex", gap: 4 }}>
-                          <button
-                            onClick={e => { e.stopPropagation(); setShowSettings(false); setEditingCourse(course); }}
-                            style={{ background: T.bgActive, border: "1px solid " + T.accent + "66", borderRadius: 5, color: T.accent, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "3px 8px", lineHeight: 1.4 }}
-                            title="Redigera bana"
-                          >✏ Redigera</button>
-                          <button
-                            onClick={e => { e.stopPropagation(); if (!window.confirm(`Vill du verkligen ta bort "${course.name}"? Detta går inte att ångra.`)) return; const updated = customCourses.filter(c => c.id !== course.id); setCustomCourses(updated); window.electronAPI?.store.set("customCourses", updated); if (courseId === course.id) setCourseId("surahammar"); }}
-                            style={{ background: "transparent", border: "none", color: T.textFaint, fontSize: 16, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
-                            title="Ta bort bana"
-                          >×</button>
+                        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                          {confirmDeleteCourseId === course.id ? (
+                            <>
+                              <span style={{ fontSize: 11, color: T.textMuted }}>Ta bort?</span>
+                              <button
+                                onClick={e => { e.stopPropagation(); const updated = customCourses.filter(c => c.id !== course.id); setCustomCourses(updated); window.electronAPI?.store.set("customCourses", updated); if (courseId === course.id) setCourseId("surahammar"); setConfirmDeleteCourseId(null); }}
+                                style={{ background: "#7f1d1d", border: "1px solid #ef444466", borderRadius: 5, color: "#fca5a5", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "3px 8px" }}
+                              >Ja</button>
+                              <button
+                                onClick={e => { e.stopPropagation(); setConfirmDeleteCourseId(null); }}
+                                style={{ background: T.bgInput, border: "1px solid " + T.border, borderRadius: 5, color: T.textDim, fontSize: 11, cursor: "pointer", padding: "3px 8px" }}
+                              >Avbryt</button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={e => { e.stopPropagation(); setShowSettings(false); setEditingCourse(course); }}
+                                style={{ background: T.bgActive, border: "1px solid " + T.accent + "66", borderRadius: 5, color: T.accent, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "3px 8px", lineHeight: 1.4 }}
+                                title="Redigera bana"
+                              >✏ Redigera</button>
+                              <button
+                                onClick={e => { e.stopPropagation(); setConfirmDeleteCourseId(course.id); }}
+                                style={{ background: "transparent", border: "none", color: T.textFaint, fontSize: 16, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
+                                title="Ta bort bana"
+                              >×</button>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
