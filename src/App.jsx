@@ -1703,7 +1703,7 @@ export default function GolfApp() {
                             title="Redigera bana"
                           >✏ Redigera</button>
                           <button
-                            onClick={e => { e.stopPropagation(); const updated = customCourses.filter(c => c.id !== course.id); setCustomCourses(updated); window.electronAPI?.store.set("customCourses", updated); if (courseId === course.id) setCourseId("surahammar"); }}
+                            onClick={e => { e.stopPropagation(); if (!window.confirm(`Vill du verkligen ta bort "${course.name}"? Detta går inte att ångra.`)) return; const updated = customCourses.filter(c => c.id !== course.id); setCustomCourses(updated); window.electronAPI?.store.set("customCourses", updated); if (courseId === course.id) setCourseId("surahammar"); }}
                             style={{ background: "transparent", border: "none", color: T.textFaint, fontSize: 16, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
                             title="Ta bort bana"
                           >×</button>
