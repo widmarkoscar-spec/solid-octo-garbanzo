@@ -442,10 +442,10 @@ function HoleAvgTable({ rounds }) {
   );
 }
 
-function AddCourseModal({ onClose, onSave }) {
+function AddCourseModal({ onClose, onSave, initialCourse }) {
   const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
-  const [subtitle, setSubtitle] = useState("");
+  const [name, setName] = useState(initialCourse?.name || "");
+  const [subtitle, setSubtitle] = useState(initialCourse?.subtitle || "");
   const [nameError, setNameError] = useState("");
   const defaultHoles = Array.from({ length: 18 }, (_, i) => ({
     hole: i + 1,
@@ -453,8 +453,9 @@ function AddCourseModal({ onClose, onSave }) {
     hcp: i + 1,
     name: "Hål " + (i + 1),
   }));
-  const [holes, setHoles] = useState(defaultHoles);
+  const [holes, setHoles] = useState(initialCourse?.holes ? initialCourse.holes.map(h => ({ ...h })) : defaultHoles);
   const [hcpError, setHcpError] = useState("");
+  const isEditing = !!initialCourse;
 
   function goToStep2() {
     if (!name.trim()) { setNameError("Banans namn är obligatoriskt."); return; }
@@ -480,12 +481,11 @@ function AddCourseModal({ onClose, onSave }) {
       return;
     }
     setHcpError("");
-    const id = "custom_" + Date.now();
     const course = {
-      id,
+      id: initialCourse?.id || "custom_" + Date.now(),
       name: name.trim(),
       subtitle: subtitle.trim(),
-      holes: holes.map(h => ({ ...h, hcp: h.hcp })),
+      holes: holes.map(h => ({ ...h })),
     };
     onSave(course);
     onClose();
@@ -496,7 +496,7 @@ function AddCourseModal({ onClose, onSave }) {
       <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 16, padding: 32, width: 620, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: T.textPrimary }}>Lägg till egen bana</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: T.textPrimary }}>{isEditing ? "Redigera bana" : "Lägg till egen bana"}</div>
             <div style={{ fontSize: 13, color: T.textDim, marginTop: 4 }}>Steg {step} av 2</div>
           </div>
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: 20, cursor: "pointer" }}>×</button>
@@ -560,7 +560,7 @@ function AddCourseModal({ onClose, onSave }) {
             {hcpError && <div style={{ color: "#f87171", fontSize: 13, marginBottom: 12, padding: "8px 12px", background: "#1c0505", borderRadius: 8, border: "1px solid #ef444433" }}>{hcpError}</div>}
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => setStep(1)} style={{ flex: 1, padding: 12, background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.textDim, fontSize: 14, cursor: "pointer" }}>← Tillbaka</button>
-              <button onClick={handleSave} style={{ flex: 2, padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Spara bana</button>
+              <button onClick={handleSave} style={{ flex: 2, padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{isEditing ? "Spara ändringar" : "Spara bana"}</button>
             </div>
           </div>
         )}
@@ -1166,6 +1166,7 @@ export default function GolfApp() {
   const [updateMsg, setUpdateMsg] = useState(null);
   const [customCourses, setCustomCourses] = useState([]);
   const [showAddCourse, setShowAddCourse] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
   const [profile, setProfile] = useState({ name: "", handicap: "", homeCourse: "", avatar: "🏌️" });
   const [bag, setBag]         = useState({ clubs: DEFAULT_CLUBS, ball: { brand: "", model: "" } });
   const [goals, setGoals]     = useState({ scoreGoal: "", hcpGoal: "" });
@@ -1655,6 +1656,18 @@ export default function GolfApp() {
         />
       )}
 
+      {editingCourse && (
+        <AddCourseModal
+          initialCourse={editingCourse}
+          onClose={() => setEditingCourse(null)}
+          onSave={(updated) => {
+            const newList = customCourses.map(c => c.id === updated.id ? updated : c);
+            setCustomCourses(newList);
+            window.electronAPI?.store.set("customCourses", newList);
+          }}
+        />
+      )}
+
       {showSettings && (
         <div style={{ position: "fixed", inset: 0, background: "#000000bb", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 16, padding: 32, width: 440 }}>
@@ -1683,11 +1696,18 @@ export default function GolfApp() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 11, color: courseId === course.id ? T.accent : T.textFaint }}>{course.subtitle}</span>
                       {course.id.startsWith("custom_") && (
-                        <button
-                          onClick={e => { e.stopPropagation(); const updated = customCourses.filter(c => c.id !== course.id); setCustomCourses(updated); window.electronAPI?.store.set("customCourses", updated); if (courseId === course.id) setCourseId("surahammar"); }}
-                          style={{ background: "transparent", border: "none", color: T.textFaint, fontSize: 14, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
-                          title="Ta bort bana"
-                        >×</button>
+                        <div style={{ display: "flex", gap: 2 }}>
+                          <button
+                            onClick={e => { e.stopPropagation(); setShowSettings(false); setEditingCourse(course); }}
+                            style={{ background: "transparent", border: "none", color: T.textDim, fontSize: 12, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}
+                            title="Redigera bana"
+                          >✏</button>
+                          <button
+                            onClick={e => { e.stopPropagation(); const updated = customCourses.filter(c => c.id !== course.id); setCustomCourses(updated); window.electronAPI?.store.set("customCourses", updated); if (courseId === course.id) setCourseId("surahammar"); }}
+                            style={{ background: "transparent", border: "none", color: T.textFaint, fontSize: 14, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
+                            title="Ta bort bana"
+                          >×</button>
+                        </div>
                       )}
                     </div>
                   </button>
