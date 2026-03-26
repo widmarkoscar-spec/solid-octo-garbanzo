@@ -147,18 +147,35 @@ let T = DARK;
 let HOLES = COURSES.surahammar.holes; // global, updated by GolfApp
 
 function parseCourseFromScorecard(text) {
-  const SKIP = /^(hal|hål|par|index|slag|j\.brutto|poang|poäng|out|in|total)/i;
+  // Supports both "one value per line" (Min Golf app) and "tab-separated" formats
+  const SKIP_LINE = /^(hål|hal|par|index|slag|j\.brutto|poäng|poang|out|in|total)\s*$/i;
   const lines = text.trim().split("\n").map(l => l.trim()).filter(Boolean);
-  const holes = {};
+
+  // Flatten all numbers, skipping word-only lines
+  const nums = [];
   for (const line of lines) {
-    if (SKIP.test(line)) continue;
-    const nums = (line.match(/\d+/g) || []).map(Number);
-    if (nums.length < 3) continue;
-    const [holeNum, par, hcp] = nums;
-    if (holeNum >= 1 && holeNum <= 18 && (par === 3 || par === 4 || par === 5) && hcp >= 1 && hcp <= 18) {
-      holes[holeNum] = { hole: holeNum, par, hcp, name: "Hål " + holeNum };
-    }
+    if (SKIP_LINE.test(line)) continue;
+    (line.match(/\d+/g) || []).forEach(n => nums.push(Number(n)));
   }
+
+  // Sliding window: look for holeNum(1-18) → par(3-5) → hcp(1-18) triplet
+  // then skip ahead 6 (hole, par, hcp, slag, j.brutto, poäng)
+  const holes = {};
+  let i = 0;
+  while (i < nums.length - 2) {
+    const holeNum = nums[i];
+    if (holeNum >= 1 && holeNum <= 18 && !holes[holeNum]) {
+      const par = nums[i + 1];
+      const hcp = nums[i + 2];
+      if ((par === 3 || par === 4 || par === 5) && hcp >= 1 && hcp <= 18) {
+        holes[holeNum] = { hole: holeNum, par, hcp, name: "Hål " + holeNum };
+        i += 6; // skip all 6 values for this hole
+        continue;
+      }
+    }
+    i++;
+  }
+
   const result = Object.values(holes).sort((a, b) => a.hole - b.hole);
   if (result.length !== 18) return null;
   if (new Set(result.map(h => h.hcp)).size !== 18) return null;
