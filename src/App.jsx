@@ -1691,26 +1691,26 @@ export default function GolfApp() {
               <label style={{ display: "block", fontSize: 11, color: T.textDim, marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Aktiv bana</label>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {allCourseList.map(course => (
-                  <button key={course.id} onClick={() => setCourseId(course.id)} style={{ padding: "10px 14px", borderRadius: 8, border: "2px solid " + (courseId === course.id ? T.accent : T.border), background: courseId === course.id ? T.bgActive : T.bgInput, color: courseId === course.id ? T.accent : T.textSecondary, fontSize: 13, fontWeight: courseId === course.id ? 700 : 400, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div key={course.id} onClick={() => setCourseId(course.id)} style={{ padding: "10px 14px", borderRadius: 8, border: "2px solid " + (courseId === course.id ? T.accent : T.border), background: courseId === course.id ? T.bgActive : T.bgInput, color: courseId === course.id ? T.accent : T.textSecondary, fontSize: 13, fontWeight: courseId === course.id ? 700 : 400, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>{course.name}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 11, color: courseId === course.id ? T.accent : T.textFaint }}>{course.subtitle}</span>
                       {course.id.startsWith("custom_") && (
-                        <div style={{ display: "flex", gap: 2 }}>
+                        <div style={{ display: "flex", gap: 4 }}>
                           <button
                             onClick={e => { e.stopPropagation(); setShowSettings(false); setEditingCourse(course); }}
-                            style={{ background: "transparent", border: "none", color: T.textDim, fontSize: 12, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}
+                            style={{ background: T.bgActive, border: "1px solid " + T.accent + "66", borderRadius: 5, color: T.accent, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "3px 8px", lineHeight: 1.4 }}
                             title="Redigera bana"
-                          >✏</button>
+                          >✏ Redigera</button>
                           <button
                             onClick={e => { e.stopPropagation(); const updated = customCourses.filter(c => c.id !== course.id); setCustomCourses(updated); window.electronAPI?.store.set("customCourses", updated); if (courseId === course.id) setCourseId("surahammar"); }}
-                            style={{ background: "transparent", border: "none", color: T.textFaint, fontSize: 14, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
+                            style={{ background: "transparent", border: "none", color: T.textFaint, fontSize: 16, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
                             title="Ta bort bana"
                           >×</button>
                         </div>
                       )}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
