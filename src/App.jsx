@@ -1175,6 +1175,183 @@ function BagView({ profile, onProfileChange, bag, onBagChange, goals, onGoalsCha
   );
 }
 
+const WEATHER_OPTIONS = [
+  { id: "sun",    label: "Sol",   emoji: "☀️" },
+  { id: "partly", label: "Mulet", emoji: "⛅" },
+  { id: "rain",   label: "Regn",  emoji: "🌧️" },
+  { id: "snow",   label: "Snö",   emoji: "❄️" },
+];
+const WIND_OPTIONS = [
+  { id: "calm",     label: "Stilla",  emoji: "🍃" },
+  { id: "light",    label: "Lätt",    emoji: "🌬️" },
+  { id: "moderate", label: "Måttlig", emoji: "💨" },
+  { id: "strong",   label: "Hård",    emoji: "🌪️" },
+];
+
+function WeatherPickerModal({ onSave, onSkip }) {
+  const [weather, setWeather] = useState(null);
+  const [wind, setWind]       = useState(null);
+  const [temp, setTemp]       = useState("");
+
+  const btnRow = (opts, sel, onSel) => (
+    <div style={{ display: "flex", gap: 8 }}>
+      {opts.map(o => (
+        <button
+          key={o.id}
+          onClick={() => onSel(sel === o.id ? null : o.id)}
+          style={{ flex: 1, padding: "10px 6px", borderRadius: 10, border: "2px solid " + (sel === o.id ? T.accent : T.border), background: sel === o.id ? T.bgActive : T.bgInput, color: sel === o.id ? T.accent : T.textSecondary, fontSize: 12, cursor: "pointer", textAlign: "center" }}
+        >
+          <div style={{ fontSize: 22 }}>{o.emoji}</div>
+          <div style={{ marginTop: 4, fontWeight: sel === o.id ? 700 : 400 }}>{o.label}</div>
+        </button>
+      ))}
+    </div>
+  );
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#000000bb", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 16, padding: 32, width: 420 }}>
+        <div style={{ fontSize: 11, color: T.accent, letterSpacing: 2, textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>Rond sparad!</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: T.textPrimary, marginBottom: 20 }}>Hur var förhållandena?</div>
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Väder</div>
+          {btnRow(WEATHER_OPTIONS, weather, setWeather)}
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Vind</div>
+          {btnRow(WIND_OPTIONS, wind, setWind)}
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Temperatur (°C)</div>
+          <input
+            type="number"
+            placeholder="t.ex. 18"
+            value={temp}
+            onChange={e => setTemp(e.target.value)}
+            style={{ width: "100%", padding: "10px 14px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onSkip} style={{ flex: 1, padding: 12, background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.textDim, fontSize: 13, cursor: "pointer" }}>Hoppa över</button>
+          <button
+            onClick={() => onSave({ weather, wind, temp: temp !== "" ? Number(temp) : null })}
+            style={{ flex: 2, padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 10, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+          >Spara förhållanden</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OnboardingModal({ allCourseList, onComplete }) {
+  const [step, setStep]         = useState(0);
+  const [name, setName]         = useState("");
+  const [handicap, setHandicap] = useState("");
+  const [pickedCourse, setPickedCourse] = useState(allCourseList[0]?.id || "surahammar");
+
+  const finish = () => {
+    onComplete({ name, handicap, homeCourse: pickedCourse, avatar: "🏌️" });
+  };
+
+  const steps = [
+    // Step 0 – Welcome
+    <div key={0}>
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 56, marginBottom: 12 }}>⛳</div>
+        <div style={{ fontSize: 24, fontWeight: 900, color: T.textPrimary, marginBottom: 8 }}>Välkommen till Slagbok!</div>
+        <div style={{ fontSize: 14, color: T.textMuted, lineHeight: 1.6 }}>
+          Din personliga golfapp för att följa din utveckling,<br />
+          spara ronder och se statistik över tid.
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
+        {[["📋","Scorekort","Registrera slag och puttar hål för hål"],["📊","Statistik","Se ditt snitt, GIR och puttdata"],["🏆","Rekord","Dina bästa ronder och achievements"]].map(([e, t, d]) => (
+          <div key={t} style={{ display: "flex", gap: 14, alignItems: "center", background: T.bgInput, borderRadius: 10, padding: "12px 16px" }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>{e}</span>
+            <div>
+              <div style={{ fontWeight: 700, color: T.textPrimary, fontSize: 14 }}>{t}</div>
+              <div style={{ fontSize: 12, color: T.textMuted }}>{d}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={() => setStep(1)} style={{ width: "100%", padding: 14, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 12, color: "#030712", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Kom igång →</button>
+    </div>,
+
+    // Step 1 – Pick home course
+    <div key={1}>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 20, fontWeight: 900, color: T.textPrimary, marginBottom: 6 }}>Välj din hemmabana</div>
+        <div style={{ fontSize: 13, color: T.textMuted }}>Du kan alltid byta bana i inställningarna senare.</div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 28 }}>
+        {allCourseList.map(course => (
+          <div
+            key={course.id}
+            onClick={() => setPickedCourse(course.id)}
+            style={{ padding: "12px 16px", borderRadius: 10, border: "2px solid " + (pickedCourse === course.id ? T.accent : T.border), background: pickedCourse === course.id ? T.bgActive : T.bgInput, cursor: "pointer" }}
+          >
+            <div style={{ fontWeight: pickedCourse === course.id ? 700 : 400, color: pickedCourse === course.id ? T.accent : T.textSecondary, fontSize: 14 }}>{course.name}</div>
+            {course.subtitle && <div style={{ fontSize: 12, color: T.textFaint, marginTop: 2 }}>{course.subtitle}</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={() => setStep(0)} style={{ flex: 1, padding: 12, background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.textDim, fontSize: 13, cursor: "pointer" }}>← Tillbaka</button>
+        <button onClick={() => setStep(2)} style={{ flex: 2, padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 12, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Nästa →</button>
+      </div>
+    </div>,
+
+    // Step 2 – Profile
+    <div key={2}>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 20, fontWeight: 900, color: T.textPrimary, marginBottom: 6 }}>Din profil</div>
+        <div style={{ fontSize: 13, color: T.textMuted }}>Valfritt – du kan fylla i detta senare under Min Bag.</div>
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Namn</label>
+        <input
+          placeholder="Ditt namn"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          style={{ width: "100%", padding: "10px 14px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+        />
+      </div>
+      <div style={{ marginBottom: 28 }}>
+        <label style={{ display: "block", fontSize: 11, color: T.textDim, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Handicap</label>
+        <input
+          type="number"
+          placeholder="t.ex. 28.4"
+          value={handicap}
+          onChange={e => setHandicap(e.target.value)}
+          style={{ width: "100%", padding: "10px 14px", background: T.bgInput, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+        />
+      </div>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={() => setStep(1)} style={{ flex: 1, padding: 12, background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.textDim, fontSize: 13, cursor: "pointer" }}>← Tillbaka</button>
+        <button onClick={finish} style={{ flex: 2, padding: 12, background: "linear-gradient(135deg, #16a34a, #4ade80)", border: "none", borderRadius: 12, color: "#030712", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Registrera min första rond →</button>
+      </div>
+    </div>,
+  ];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: T.bgApp, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: T.bgCard, border: "1px solid " + T.border, borderRadius: 20, padding: 40, width: 480, maxWidth: "calc(100vw - 40px)" }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 28 }}>
+          {[0,1,2].map(i => (
+            <div key={i} style={{ flex: 1, height: 4, borderRadius: 99, background: i <= step ? T.accent : T.border, transition: "background 0.3s" }} />
+          ))}
+        </div>
+        {steps[step]}
+      </div>
+    </div>
+  );
+}
+
 function DeleteRoundButton({ onDelete }) {
   const [confirming, setConfirming] = useState(false);
   if (confirming) {
@@ -1222,6 +1399,8 @@ export default function GolfApp() {
   const [profile, setProfile] = useState({ name: "", handicap: "", homeCourse: "", avatar: "🏌️" });
   const [bag, setBag]         = useState({ clubs: DEFAULT_CLUBS, ball: { brand: "", model: "" } });
   const [goals, setGoals]     = useState({ scoreGoal: "", hcpGoal: "" });
+  const [hasOnboarded, setHasOnboarded] = useState(false);
+  const [pendingWeatherRoundId, setPendingWeatherRoundId] = useState(null);
 
   T = darkMode ? DARK : LIGHT;
   const allCoursesMap = { ...COURSES, ...Object.fromEntries(customCourses.map(c => [c.id, c])) };
@@ -1248,6 +1427,8 @@ export default function GolfApp() {
           if (savedBag) setBag(savedBag);
           const savedGoals = await s.get("goals");
           if (savedGoals) setGoals(savedGoals);
+          const onboarded = await s.get("hasOnboarded");
+          if (onboarded) setHasOnboarded(true);
         }
       } catch {}
       setStorageReady(true);
@@ -1636,6 +1817,16 @@ export default function GolfApp() {
     setSaveStatus("saving");
     try { window.electronAPI?.store.set("rounds", updated); setSaveStatus("saved"); setTimeout(() => setSaveStatus(""), 2500); }
     catch { setSaveStatus("error"); }
+    setPendingWeatherRoundId(newRound.id);
+  };
+
+  const saveWeatherForRound = (roundId, conditions) => {
+    setRounds(prev => {
+      const up = prev.map(r => r.id === roundId ? { ...r, conditions } : r);
+      try { window.electronAPI?.store.set("rounds", up); } catch {}
+      return up;
+    });
+    setPendingWeatherRoundId(null);
   };
 
   const startNewRound = () => { setScores({}); setPutts({}); setActiveHole(1); setView("scorecard"); };
@@ -1665,8 +1856,33 @@ export default function GolfApp() {
   const editDiff     = editTotal - editTotalPar;
   const editPutTotal = Object.values(editPutts).reduce((s, p) => s + p, 0);
 
+  const completeOnboarding = ({ name, handicap, homeCourse, avatar }) => {
+    setHasOnboarded(true);
+    try { window.electronAPI?.store.set("hasOnboarded", true); } catch {}
+    if (name || handicap) {
+      const updated = { ...profile, name, handicap, homeCourse, avatar };
+      setProfile(updated);
+      try { window.electronAPI?.store.set("profile", updated); } catch {}
+    }
+    if (homeCourse) {
+      setCourseId(homeCourse);
+      try { window.electronAPI?.store.set("course", homeCourse); } catch {}
+    }
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: T.bgApp, fontFamily: "system-ui, sans-serif", color: T.textSecondary, display: "flex", flexDirection: "column" }}>
+
+      {storageReady && !hasOnboarded && (
+        <OnboardingModal allCourseList={allCourseList} onComplete={completeOnboarding} />
+      )}
+
+      {pendingWeatherRoundId && (
+        <WeatherPickerModal
+          onSave={(conditions) => saveWeatherForRound(pendingWeatherRoundId, conditions)}
+          onSkip={() => setPendingWeatherRoundId(null)}
+        />
+      )}
 
       {updateMsg && (
         <div style={{ background: updateMsg.type === "downloaded" ? "#2a7d4f" : "#1a5276", color: "#fff", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 14 }}>
@@ -1688,7 +1904,7 @@ export default function GolfApp() {
       {showImport && (
         <ImportModal
           onClose={() => setShowImport(false)}
-          onImport={(round) => { const updated = [...rounds, round]; saveRounds(updated); setSaveStatus("saved"); setTimeout(() => setSaveStatus(""), 2500); }}
+          onImport={(round) => { const updated = [...rounds, round]; saveRounds(updated); setSaveStatus("saved"); setTimeout(() => setSaveStatus(""), 2500); setPendingWeatherRoundId(round.id); }}
           courseId={courseId}
           setCourseId={setCourseId}
           courseList={allCourseList}
@@ -2212,6 +2428,13 @@ export default function GolfApp() {
                               {round.playerName && <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary }}>{round.playerName}</div>}
                               {round.courseName && <div style={{ fontSize: 11, color: T.accent, fontWeight: 600, marginTop: round.playerName ? 2 : 0 }}>{round.courseName}</div>}
                               <div style={{ fontSize: 12, color: T.textDim, marginTop: 2 }}>{new Date(round.date).toLocaleDateString("sv-SE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
+                              {round.conditions && (
+                                <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+                                  {round.conditions.weather && (() => { const w = WEATHER_OPTIONS.find(o => o.id === round.conditions.weather); return w ? <span style={{ fontSize: 12, color: T.textMuted }}>{w.emoji} {w.label}</span> : null; })()}
+                                  {round.conditions.wind && (() => { const w = WIND_OPTIONS.find(o => o.id === round.conditions.wind); return w ? <span style={{ fontSize: 12, color: T.textMuted }}>{w.emoji} {w.label}</span> : null; })()}
+                                  {round.conditions.temp !== null && round.conditions.temp !== undefined && <span style={{ fontSize: 12, color: T.textMuted }}>🌡️ {round.conditions.temp}°C</span>}
+                                </div>
+                              )}
                             </div>
                             <div style={{ textAlign: "center", width: 64 }}>
                               <div style={{ fontSize: 28, fontWeight: 900, color: diffColor }}>{diffLabel}</div>
