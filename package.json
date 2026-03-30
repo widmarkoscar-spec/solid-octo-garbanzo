@@ -1,7 +1,7 @@
 {
   "name": "slagbok",
   "private": true,
-  "version": "1.6.0",
+  "version": "1.7.0",
   "main": "electron.cjs",
   "type": "module",
   "scripts": {
@@ -10,19 +10,23 @@
     "preview": "vite preview",
     "electron": "electron .",
     "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "icon:generate": "node scripts/generate-icon.js"
   },
   "build": {
     "appId": "se.slagbok.app",
     "productName": "Slagbok",
     "electronVersion": "35.1.2",
+    "icon": "build/icon.ico",
     "files": [
       "dist/**/*",
       "electron.cjs",
-      "preload.js"
+      "preload.js",
+      "build/icon.ico"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "publish": {
       "provider": "github",
@@ -41,6 +45,8 @@
     "concurrently": "^9.1.2",
     "electron": "^35.1.2",
     "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5",
     "vite": "^6.3.1",
     "wait-on": "^8.0.3"
   }

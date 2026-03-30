@@ -14,6 +14,7 @@ function createWindow() {
     minWidth: 1024,
     minHeight: 600,
     title: "Slagbok",
+    icon: path.join(__dirname, "build/icon.ico"),
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
